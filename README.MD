@@ -20,9 +20,7 @@ Some JSON workflow files in the	```workflow``` directory, That's examples of how
 
 
 ## How to install 
-(Taking ComfyUI official portable package and Aki ComfyUI package as examples, please modify the dependency environment directory for other ComfyUI environments)
 
-### Install plugin
 * Recommended use ComfyUI Manager for installation.
 
 * Or open the cmd window in the plugin directory of ComfyUI, like ```ComfyUI\custom_nodes```，type    
@@ -31,33 +29,17 @@ git clone https://github.com/chflame163/ComfyUI_LayerStyle.git
 ```
 * Or download the zip file and extracted, copy the resulting folder to ```ComfyUI\custom_ Nodes```    
 
-### Install dependency packages 
-* for ComfyUI official portable package, double-click the ```install_requirements.bat``` in the plugin directory, for Aki ComfyUI package double-click on the ```install_requirements_aki.bat``` in the plugin directory, and wait for the installation to complete.
-  
-* Or install dependency packages, open the cmd window in the ComfyUI_LayerStyle plugin directory like 
-```ComfyUI\custom_ Nodes\ComfyUI_LayerStyle``` and enter the following command,
-
-&emsp;&emsp;for ComfyUI official portable package, type:
+* Install dependency packages, open the cmd window in the ComfyUI_LayerStyle plugin directory like    
+```ComfyUI\custom_ Nodes\ComfyUI_LayerStyle``` and enter the following command:    
 
 ```
-..\..\..\python_embeded\python.exe -s -m pip install .\whl\docopt-0.6.2-py2.py3-none-any.whl
-..\..\..\python_embeded\python.exe -s -m pip install -r requirements.txt
-.\repair_dependency.bat
+..\..\..\python_embeded\python.exe -m pip install -r requirements.txt
 ```
-&emsp;&emsp;for Aki ComfyUI package, type:
 
-```
-..\..\python\python.exe -s -m pip install .\whl\docopt-0.6.2-py2.py3-none-any.whl
-..\..\python\python.exe -s -m pip install -r requirements.txt
-.\repair_dependency.bat
-```
 * Restart ComfyUI.
 
 ## Common Issues
 If the node cannot load properly or there are errors during use, please check the error message in the ComfyUI terminal window. The following are common errors and their solutions.
-
-### Warning: xxxx.ini not found, use default xxxx..
-This warning message indicates that the ini file cannot be found and does not affect usage. If you do not want to see these warnings, please modify all ```*.ini.example``` files in the plugin directory to ```*.ini```.
 
 ### ModuleNotFoundError: No module named 'psd_tools'
 This error is that the ```psd_tools``` were not installed correctly.   
@@ -83,7 +65,7 @@ This error is caused by the low version of ```transformers``` package.
 ### insightface Loading very slow
 This error is caused by the low version of ```protobuf``` package. 
 
-#### For the issues with the above three dependency packages, please double click ```repair_dependency.bat``` (for Official ComfyUI Protable) or  ```repair_dependency_aki.bat``` (for ComfyUI-aki-v1.x) in the plugin folder to automatically fix them.
+## For the issues with the above three dependency packages, please double click ```repair_dependency.bat``` (for Official ComfyUI Protable) or  ```repair_dependency_aki.bat``` (for ComfyUI-aki-v1.x) in the plugin folder to automatically fix them.
 
 ### ValueError: Trimap did not contain foreground values (xxxx...)
 This error is caused by the mask area being too large or too small when using the ```PyMatting``` method to handle the mask edges.    
@@ -98,12 +80,6 @@ When this error has occurred, please check the network environment.
 ## Update
 <font size="4">**If the dependency package error after updating, please reinstall the relevant dependency packages. </font><br />    
 
-* Commit [Florence2Ultra](#Florence2Ultra),  [Florence2Image2Prompt](#Florence2Image2Prompt) and [LoadFlorence2Model](#LoadFlorence2Model) nodes.
-* [TransparentBackgroundUltra](#TransparentBackgroundUltra) node add new model support. Please download the model file according to the instructions.
-* Commit [SegformerUltraV2](#SegformerUltraV2), [SegfromerFashionPipeline](#SegfromerFashionPipeline) and [SegformerClothesPipeline](#SegformerClothesPipeline) nodes, used for segmentation of clothing. please download the model file according to the instructions.
-* Commit ```install_requirements.bat``` and ```install_requirements_aki.bat```, One click solution to install dependency packages.
-* Commit [TransparentBackgroundUltra](#TransparentBackgroundUltra) node, it remove background based on transparent-background model.
-* Change the VitMatte model of the [Ultra](#Ultra) node to a local call. Please download [all files of vitmatte model](https://huggingface.co/hustvl/vitmatte-small-composition-1k/tree/main) to the ```ComfyUI/models/vitmatte``` folder.
 * [GetColorToneV2](#GetColorToneV2) node add the ```mask``` method to the color selection option, which can accurately obtain the main color and average color within the mask.
 * [ImageScaleByAspectRatioV2](#ImageScaleByAspectRatioV2) node add the "background_color" option.
 * [LUT Apply](#LUT) Add the "strength" option.
@@ -754,22 +730,6 @@ Node options:
 * api: The Api used. At present, there are two options "gemini-1. 5-flash" and "google-gemini".
 * token_limit: The maximum token limit for generating prompt words.
 * discribe: Enter a simple description here. supports Chinese text input.
-
-### <a id="table1">Florence2Image2Prompt</a>
-Use the Florence 2 model to infer prompt words. The code for this node section is from[yiwangsimple/florence_dw](https://github.com/yiwangsimple/florence_dw), thanks to the original author.
-*When using it for the first time, the model will be automatically downloaded.
-![image](image/florence2_image2prompt_example.jpg) 
-
-Node Options:
-![image](image/florence2_image2prompt_node.jpg)
-* florence2_model: Florence2 model input.
-* image: Image input.
-* task: Select the task for florence2.
-* text_input: Text input for florence2.
-* max_new_tokens: The maximum number of tokens for generating text.
-* num_beams: The number of beam searches that generate text.
-* do_sample: Whether to use text generated sampling.
-* fill_mask: Whether to use text marker mask filling.
 
 ### <a id="table1">ImageShift</a>
 Shift the image. this node supports the output of displacement seam masks, making it convenient to create continuous textures.
@@ -1430,8 +1390,6 @@ Note: When running for the first time, you need to download the vitmate model fi
 After successfully downloading the model, you can use ```VITMatte(local)``` without accessing the network.
 * VitMatte's options: ```device``` set whether to use CUDA for vitimate operations, which is about 5 times faster than CPU. ```max_megapixels``` set the maximum image size for vitmate operation, and oversized images will be reduced in size. For 16G VRAM, it is recommended to set it to 3.
 
-Download the vitmatte model files [all files of vitmatte model](https://huggingface.co/hustvl/vitmatte-small-composition-1k/tree/main) to the ```ComfyUI/models/vitmatte``` folder.
-
 The following figure is an example of the difference in output between three methods.
 ![image](image/mask_edge_ultra_detail_v2_example.jpg)   
 
@@ -1473,35 +1431,6 @@ On the basis of SegmentAnythingUltra, the following changes have been made:
 * detail_dilate: The edge of the mask expands outward. the larger the value, the wider the range of outward repair.
 * device: Set whether the VitMatte to use cuda.
 * max_megapixels: Set the maximum size for VitMate operations.
-
-### <a id="table1">Florence2Ultra</a>
-Using the segmentation function of the Florence2 model, while also having ultra-high edge details.
-The code for this node section is from [spacepxl/ComfyUI-Florence-2](https://github.com/spacepxl/ComfyUI-Florence-2), thanks to the original author.
-
-![image](image/florence2_ultra_example.jpg)    
-
-Node Options:  
-![image](image/florence2_ultra_node.jpg)    
-* florence2_model: Florence2 model input.
-* image: Image input.
-* task: Select the task for florence2.
-* text_input: Text input for florence2.
-* detail_method: Edge processing methods. provides VITMatte, VITMatte(local), PyMatting, GuidedFilter. If the model has been downloaded after the first use of VITMatte, you can use VITMatte (local) afterwards.
-* detail_erode: Mask the erosion range inward from the edge. the larger the value, the larger the range of inward repair.
-* detail_dilate: The edge of the mask expands outward. the larger the value, the wider the range of outward repair.
-* black_point: Edge black sampling threshold.
-* white_point: Edge white sampling threshold.
-* process_detail: Set to false here will skip edge processing to save runtime.
-* device: Set whether the VitMatte to use cuda.
-* max_megapixels: Set the maximum size for VitMate operations.
-
-### <a id="table1">LoadFlorence2Model</a>
-Florence2 model loader.
-*When using it for the first time, the model will be automatically downloaded.
-
-![image](image/load_florence2_model_node.jpg)   
-At present, there are base, base-ft, large, large-ft, DocVQA, SD3-Captioner and base-PromptGen models to choose from.
-
 
 ### <a id="table1">RemBgUltra</a>
 Remove background. compared to the similar background removal nodes, this node has ultra-high edge details.
@@ -1550,25 +1479,6 @@ Node options:
 * device: Set whether the VitMatte to use cuda.
 * max_megapixels: Set the maximum size for VitMate operations.
 
-### <a id="table1">TransparentBackgroundUltra</a>
-Using the transparent-background model to remove background has better recognition ability and speed, while also having ultra-high edge details.
-
-*From [googledrive](https://drive.google.com/drive/folders/10KBDY19egb8qEQBv34cqIVSwd38bUAa9?usp=sharing) or  [BaiduNetdisk](https://pan.baidu.com/s/1CYZ4VwvU06e-02BKRUj9QQ?pwd=jjt9)  download all files to ```ComfyUI/models/transparent-background``` folder.
-
-![image](image/transparent_background_ultra_example.jpg)    
-
-Node Options:  
-![image](image/transparent_background_ultra_node.jpg)    
-* model: Select the model.
-* detail_method: Edge processing methods. provides VITMatte, VITMatte(local), PyMatting, GuidedFilter. If the model has been downloaded after the first use of VITMatte, you can use VITMatte (local) afterwards.
-* detail_erode: Mask the erosion range inward from the edge. the larger the value, the larger the range of inward repair.
-* detail_dilate: The edge of the mask expands outward. the larger the value, the wider the range of outward repair.
-* black_point: Edge black sampling threshold.
-* white_point: Edge white sampling threshold.
-* process_detail: Set to false here will skip edge processing to save runtime.
-* device: Set whether the VitMatte to use cuda.
-* max_megapixels: Set the maximum size for VitMate operations.
-
 ### <a id="table1">PersonMaskUltra</a>
 Generate masks for portrait's face, hair, body skin, clothing, or accessories. Compared to the previous A Person Mask Generator node, this node has ultra-high edge details.
 The model code for this node comes from [a-person-mask-generator](https://github.com/djbielejeski/a-person-mask-generator)， edge processing code from [ComfyUI-Image-Filters](https://github.com/spacepxl/ComfyUI-Image-Filters)，thanks to the original author.
@@ -1606,7 +1516,7 @@ Generate masks for characters' faces, hair, arms, legs, and clothing, mainly use
 The model segmentation code is from[StartHua](https://github.com/StartHua/Comfyui_segformer_b2_clothes)，thanks to the original author.
 Compared to the comfyui_segformer_b2_clothes, this node has ultra-high edge details. (Note: Generating images with edges exceeding 2K in size using the VITMatte method will consume a lot of memory)    
 
-*Download all model files from [here](https://huggingface.co/mattmdjaga/segformer_b2_clothes/tree/main) to   ```ComfyUI/models/segformer_b2_clothes``` folder.
+*Download all model files from [https://huggingface.co/mattmdjaga/segformer_b2_clothes](https://huggingface.co/mattmdjaga/segformer_b2_clothes) to   ```ComfyUI/models/segformer_b2_clothes``` folder.
 
 Node Options:  
 ![image](image/segformer_ultra_node.jpg)    
@@ -1634,103 +1544,6 @@ Node Options:
 * device: Set whether the VitMatte to use cuda.
 * max_megapixels: Set the maximum size for VitMate operations.
 
-### <a id="table1">SegformerUltraV2</a>
-![image](image/segformer_clothes_example.jpg)   
-![image](image/segformer_fashion_example.jpg)   
-Using the segformer model to segment clothing with ultra-high edge details. Currently supports segformer b2 clothes, segformer b3 clothes and segformer b3 fashion。
-
-*from [here](https://huggingface.co/mattmdjaga/segformer_b2_clothes/tree/main) download all files to ```ComfyUI/models/segformer_b2_clothes``` folder.        
-*from [here](https://huggingface.co/sayeed99/segformer_b3_clothes/tree/main) download all files to ```ComfyUI/models/segformer_b3_clothes``` folder.    
-*from [here](https://huggingface.co/sayeed99/segformer-b3-fashion/tree/main) download all files to ```ComfyUI/models/segformer_b3_fashion``` folder.    
-
-Node Options:  
-![image](image/segformer_ultra_v2_node.jpg)    
-* image: The input image.
-* segformer_pipeline: Segformer pipeline input. The pipeline is output by SegformerClottesPipeline and SegformerFashionPipeline node.
-* detail_method: Edge processing methods. provides VITMatte, VITMatte(local), PyMatting, GuidedFilter. If the model has been downloaded after the first use of VITMatte, you can use VITMatte (local) afterwards.
-* detail_erode: Mask the erosion range inward from the edge. the larger the value, the larger the range of inward repair.
-* detail_dilate: The edge of the mask expands outward. the larger the value, the wider the range of outward repair.
-* black_point: Edge black sampling threshold.
-* white_point: Edge white sampling threshold.
-* process_detail: Set to false here will skip edge processing to save runtime.
-* device: Set whether the VitMatte to use cuda.
-* max_megapixels: Set the maximum size for VitMate operations.
-
-### <a id="table1">SegformerClothesPipiline</a>
-Select the segformer clothes model and choose the segmentation content.  
-
-Node Options:  
-![image](image/segformer_clothes_pipeline_node.jpg)    
-* model: Model selection. There are currently two models available to choose from for segformer b2 clothes and segformer b3 clothes.
-* face: Facial recognition switch.
-* hair: Hair recognition switch.
-* hat: Hat recognition switch.
-* sunglass: Sunglass recognition switch.
-* left_arm: Left arm recognition switch.
-* right_arm: Right arm recognition switch.
-* left_leg: Left leg recognition switch.
-* right_leg: Right leg recognition switch.
-* left_shoe: Left shoe recognition switch.
-* right_shoe: Right shoe recognition switch.
-* skirt: Skirt recognition switch.
-* pants: Pants recognition switch.
-* dress: Dress recognition switch.
-* belt: Belt recognition switch.
-* bag: Bag recognition switch.
-* scarf: Scarf recognition switch.
-
-### <a id="table1">SegformerFashionPipiline</a> 
-Select the segformer fashion model and choose the segmentation content.
-
-Node Options:  
-![image](image/segformer_fashion_pipeline_node.jpg)    
-* model: Model selection. Currently, there is only one model available for selection: segformer b3 fashion。
-* shirt: shirt and blouse switch.
-* top: top, t-shirt, sweatshirt switch.
-* sweater: sweater switch.
-* cardigan: cardigan switch.
-* jacket: jacket switch.
-* vest: vest switch.
-* pants: pants switch.
-* shorts: shorts switch.
-* skirt: skirt switch.
-* coat: coat switch.
-* dress: dress switch.
-* jumpsuit: jumpsuit switch.
-* cape: cape switch.
-* glasses: glasses switch.
-* hat: hat switch.
-* hairaccessory: headband, head covering, hair accessory switch.
-* tie: tie switch.
-* glove: glove switch.
-* watch: watch switch.
-* belt: belt switch.
-* legwarmer: leg warmer switch.
-* tights: tights and stockings switch.
-* sock: sock switch.
-* shoe: shoes switch.
-* bagwallet: bag and wallet switch.
-* scarf: scarf switch.
-* umbrella: umbrella switch.
-* hood: hood switch.
-* collar: collar switch.
-* lapel: lapel switch.
-* epaulette: epaulette switch.
-* sleeve: sleeve switch.
-* pocket: pocket switch.
-* neckline: neckline switch.
-* buckle: buckle switch.
-* zipper: zipper switch.
-* applique: applique switch.
-* bead: bead switch.
-* bow: bow switch.
-* flower: flower switch.
-* fringe: fringe switch.
-* ribbon: ribbon switch.
-* rivet: rivet switch.
-* ruffle: ruffle switch.
-* sequin: sequin switch.
-* tassel: tassel switch.
 
 ### <a id="table1">MaskEdgeUltraDetail</a>
 Process rough masks to ultra fine edges.
