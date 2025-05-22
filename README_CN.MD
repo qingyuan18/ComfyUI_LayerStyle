@@ -1,7 +1,31 @@
 ﻿# ComfyUI Layer Style
 
-商业合作请联系email [chflame@163.com](mailto:chflame@163.com)
+## 重要通知
+分拆部分依赖易出问题的节点至[ComfyUI_LayerStyle_Advance](https://github.com/chflame163/ComfyUI_LayerStyle_Advance)仓库。包括下列节点：    
+LayerMask: BiRefNetUltra, LayerMask: BiRefNetUltraV2, LayerMask: LoadBiRefNetModel, LayerMask: LoadBiRefNetModelV2,    
+LayerMask: EVFSAMUltra, LayerMask: Florence2Ultra, LayerMask: LoadFlorence2Model, LayerUtility: Florence2Image2Prompt,    
+LayerUtility: GetColorTone, LayerUtility: GetColorToneV2, LayerMask: HumanPartsUltra, LayerMask: BenUltra, LayerMask: LoadBenModel,           
+LayerUtility: ImageAutoCrop, LayerUtility: ImageAutoCropV2, LayerUtility: ImageAutoCropV3,    
+LayerUtility: ImageRewardFilter, LayerUtility: LoadJoyCaption2Model, LayerUtility: JoyCaption2Split,    
+LayerUtility: JoyCaption2, LayerUtility: JoyCaption2ExtraOptions, LayerUtility: LaMa,    
+LayerUtility: LlamaVision, LayerUtility: LoadPSD, LayerMask: MaskByDifferent, LayerMask: MediapipeFacialSegment,    
+LayerMask: BBoxJoin, LayerMask: DrawBBoxMask, LayerMask: ObjectDetectorFL2, LayerMask: ObjectDetectorMask,    
+LayerMask: ObjectDetectorYOLO8, LayerMask: ObjectDetectorYOLOWorld, LayerMask: PersonMaskUltra, LayerMask: PersonMaskUltra V2,    
+LayerUtility: PhiPrompt, LayerUtility: PromptEmbellish, LayerUtility: PromptTagger, LayerUtility: CreateQRCode, LayerUtility: DecodeQRCode,    
+LayerUtility: QWenImage2Prompt, LayerMask: SAM2Ultra, LayerMask: SAM2VideoUltra, LayerUtility: SaveImagePlus, LayerUtility: SD3NegativeConditioning,    
+LayerMask: SegmentAnythingUltra, LayerMask: SegmentAnythingUltra V2, LayerMask: TransparentBackgroundUltra,     
+LayerUtility: UserPromptGeneratorTxt2ImgPrompt, LayerUtility: UserPromptGeneratorTxt2ImgPromptWithReference, LayerUtility: UserPromptGeneratorReplaceWord,    
+LayerUtility: AddBlindWaterMark, LayerUtility: ShowBlindWaterMark, LayerMask: YoloV8Detect
 
+如果最近更新了插件，请安装[ComfyUI_LayerStyle_Advance](https://github.com/chflame163/ComfyUI_LayerStyle_Advance)保证之前的工作流不会缺失节点。
+如果因为拆分仓库导致问题，请回滚插件版本到```3d4a3526a9d1a19671a133e9215077bda520ee5d```
+在插件目录打开终端，使用下列命令回滚版本：****
+```
+git reset --hard 3d4a3526a9d1a19671a133e9215077bda520ee5d
+```
+
+
+商业合作请联系email [chflame@163.com](mailto:chflame@163.com)
 
 
 一组为ComfyUI设计的节点，可以合成图层达到类似Photoshop的功能。这些节点将PhotoShop的一部分基本功能迁移到ComfyUI，旨在集中工作流程，减少软件切换的频率。  
@@ -15,7 +39,9 @@
 
 
 ## 安装方法
+(以ComfyUI官方便携包和秋叶整合包为例，其他ComfyUI环境请修改依赖环境目录)
 
+### 安装插件
 * 推荐使用 ComfyUI Manager 安装。
 * 或者在CompyUI插件目录(例如“CompyUI\custom_nodes\”)中打开cmd窗口，键入    
 ```
@@ -24,40 +50,62 @@ git clone https://github.com/chflame163/ComfyUI_LayerStyle.git
      
 * 或者下载解压zip文件，将得到的文件夹复制到 ```ComfyUI\custom_nodes\```。   
 
-* 安装依赖包，在资源管理器```ComfyUI\custom_nodes\ComfyUI_LayerStyle``` 插件目录位置打开cmd窗口，输入以下命令：     
-```
-..\..\..\python_embeded\python.exe -m pip install -r requirements.txt
-```
+### 安装依赖包
 
+* 官方便携包请双击运行插件目录下的```install_requirements.bat```，秋叶整合包请双击运行插件目录下的```install_requirements_aki.bat```，然后等待安装完成。
 
-  重新打开ComfyUI。
+* 或者在资源管理器```ComfyUI\custom_nodes\ComfyUI_LayerStyle``` 插件目录位置打开cmd窗口，  
+
+&emsp;&emsp;官方便携包输入以下命令：
+
+```
+..\..\..\python_embeded\python.exe -s -m pip install -r requirements.txt
+.\repair_dependency.bat
+```
+&emsp;&emsp;秋叶整合包输入以下命令：
+
+```
+..\..\python\python.exe -s -m pip install -r requirements.txt
+.\repair_dependency_aki.bat
+```
+* 重新打开ComfyUI。
+
+### 下载模型
+国内用户请从[百度网盘](https://pan.baidu.com/s/1T_uXMX3OKIWOJLPuLijrgA?pwd=1yye)或者[夸克网盘](https://pan.quark.cn/s/4802d6bca7cb), 海外用户请从[huggingface](https://huggingface.co/chflame163/ComfyUI_LayerStyle/tree/main), 
+下载全部模型文件并复制到```ComfyUI\models```文件夹。这个链接提供了本插件需要的所有的模型文件。
+或者按各个节点的说明下载模型文件。     
+以Ultra命名的节点使用vitmatte模型，请下载[vitmatte模型](https://huggingface.co/hustvl/vitmatte-small-composition-1k/tree/main)到```ComfyUI/models/vitmatte```文件夹，上面的下载链接也包括了这个模型。
 
 ## 常见问题
 如果节点不能正常加载，或者使用中出现错误，请在ComfyUI终端窗口查看报错信息。以下是常见的错误及解决方法。
 
-### ModuleNotFoundError: No module named 'psd_tools'
-这个错误是```psd_tools```没有正确安装。    
-
-解决方法：
-* 关闭ComfyUI，在插件目录下打开终端窗口，执行以下命令:
-```../../../python_embeded/python.exe -s -m pip install psd_tools```
-如果安装psd_tool中出现```ModuleNotFoundError: No module named 'docopt'```错误，请下载[docopt的whl](https://www.piwheels.org/project/docopt/)手动安装。在终端执行以下命令:
-```../../../python_embeded/python.exe -s -m pip install path/docopt-0.6.2-py2.py3-none-any.whl``` path为whl文件的路径名。
+### Warning: xxxx.ini not found, use default xxxx..
+这个警告信息是找不到ini文件的提示，不影响使用。如果不想看到这些警告，请修改插件目录下所有的 ```*.ini.example``` 文件名为```*.ini```。
 
 ### Cannot import name 'guidedFilter' from 'cv2.ximgproc'
-这个错误是```opencv-contrib-python```没有正确安装，或者安装后又安装了其他opencv包导致。    
-
+这个错误是```opencv-contrib-python```没有正确安装，或者安装后又安装了其他opencv包导致。
 
 ### NameError: name 'guidedFilter' is not defined
 问题原因同上。
+#### 以上问题，请双击运行插件目录下的```repair_dependency.bat```(官方便携包)或者```repair_dependency_aki.bat```(秋叶整合包)自动修复。
 
-###  Cannot import name 'VitMatteImageProcessor' from 'transformers' 
+### Cannot import name 'VitMatteImageProcessor' from 'transformers' 
 这个错误是由于```transformers``` 版本过低造成的
 
 ### insightface 加载缓慢
-这是由于```protobuf``` 版本过低造成的。
+这是由于```protobuf``` 版本过低造成的。 
 
-## 以上三个依赖包的问题，请双击运行插件目录下的```repair_dependency.bat```(官方便携包)或者```repair_dependency_aki.bat```(秋叶整合包)自动修复。 
+### onnxruntime::python::CreateExecutionProviderInstance CUDA_PATH is set but CUDA wasn't able to be loaded. Please install the correct version of CUDA and cuDNN as mentioned in the GPU requirements page 
+解决方法：
+请重新安装```onnxruntime```依赖包
+
+###  Error loading model xxx: We couldn't connect to huggingface.co ...
+请检查网络环境。如果在中国不能正常访问huggingface.co，请尝试修改huggingface_hub包强制使用hf_mirror镜像。
+* 在```huggingface_hub```包的目录(通常在虚拟环境内的```Lib/site-packages/huggingface_hub```)中找到```constants.py```,
+在```import os```之后增加一行
+```
+os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+```
 
 ### ValueError: Trimap did not contain foreground values (xxxx...)
 这个错误是由于使用PyMatting方法处理遮罩边缘时，遮罩面积过大或者过小引起的。     
@@ -73,13 +121,107 @@ git clone https://github.com/chflame163/ComfyUI_LayerStyle.git
 * 在ComfyUI画布点击右键 - Add Node, 找到 "😺dzNodes"。    
 ![image](image/node-menu.jpg)    
 
-* 或者在ComfyUI画布双击, 在搜索框输入"layer"。
+* 或者在ComfyUI画布双击, 在搜索框输入"layer"。Florence2Image2Prompt
 ![image](image/node-search.jpg)    
 
 
 ## 更新说明
-<font size="4">**如果本插件更新后出现依赖包错误，请重新安装相关依赖包。
+<font size="4">**如果本插件更新后出现依赖包错误，请双击运行插件目录下的```install_requirements.bat```(官方便携包)，或 ```install_requirements_aki.bat```(秋叶整合包) 重新安装依赖包。
 
+* 添加 [SegformerUltraV3](SegformerUltraV3), [LoadSegformerModel](LoadSegformerModel), [SegformerClothesSetting](SegformerClothesSetting) 和 [SegformerFashionSetting](SegformerFashionSetting) 节点，将模型与设置分离加载，在使用多个节点时节省资源。
+* 添加多语言，除英语外，增加支持5种语言：中文、法语、日语、韩语和俄语。该功能使用[ComfyUI-Globalization-Node-Translation](https://github.com/yamanacn/ComfyUI-Globalization-Node-Translation)制作，感谢原作者。 
+* 添加 [HalfTone](#HalfTone) 节点，用于对图像进行半色调处理。
+* 增加模型下载夸克网盘链接。
+* 支持numpy 2.x依赖包。
+* 添加 [PurgeVRAM V2](#PurgeVRAMV2) 节点，不强制执行，增加any输出，便于在流程中灵活释放显存。
+* 添加 [ChoiceTextPreset](#ChoiceTextPreset) 和 [TextPreseter](#TextPreseter) 节点，用于预设文本和选择预设文本输出。
+* [StringCondition](#StringCondition) 节点增加比较字符串是否相同功能。
+* 添加 [NameToColor](#NameToColor)节点，根据颜色名称输出颜色。
+* 添加 [ImageMaskScaleAsV2](#ImageMaskScaleAsV2)节点，在原节点基础上增加背景颜色设置。
+* 添加 [RoundedRectangle](#RoundedRectangle) 节点，用于创建圆角矩形及遮罩。
+* 添加 [AnyRerouter](#AnyRerouter) 节点，用于将任意类型数据中转转发。
+* 添加 [ICMask](#ICMask) 和 [ICMaskCropBack](#ICMaskCropBack) 节点，用于生成一致性上下文图片和遮罩，以及自动回裁。代码来自[lrzjason/Comfyui-In-Context-Lora-Utils](https://github.com/lrzjason/Comfyui-In-Context-Lora-Utils) 感谢原作者@小志Jason
+* 添加 [GetMainColorsV2](#GetMainColorsV2) 节点，增加按颜色面积排序，并在预览图中输出色值和比例。这部分代码由@HL完善，感谢。
+* 优化依赖包。优化部分图形算法。
+* 分拆部分依赖易出问题的节点至[ComfyUI_LayerStyle_Advance](#https://github.com/chflame163/ComfyUI_LayerStyle_Advance)仓库。包括下列节点：    
+LayerMask: BiRefNetUltra, LayerMask: BiRefNetUltraV2, LayerMask: LoadBiRefNetModel, LayerMask: LoadBiRefNetModelV2,    
+LayerMask: EVFSAMUltra, LayerMask: Florence2Ultra, LayerMask: LoadFlorence2Model, LayerUtility: Florence2Image2Prompt,    
+LayerUtility: GetColorTone, LayerUtility: GetColorToneV2, LayerMask: HumanPartsUltra,    
+LayerUtility: ImageAutoCrop, LayerUtility: ImageAutoCropV2, LayerUtility: ImageAutoCropV3,    
+LayerUtility: ImageRewardFilter, LayerUtility: LoadJoyCaption2Model, LayerUtility: JoyCaption2Split,    
+LayerUtility: JoyCaption2, LayerUtility: JoyCaption2ExtraOptions, LayerUtility: LaMa,    
+LayerUtility: LlamaVision, LayerUtility: LoadPSD, LayerMask: MaskByDifferent, LayerMask: MediapipeFacialSegment,    
+LayerMask: BBoxJoin, LayerMask: DrawBBoxMask, LayerMask: ObjectDetectorFL2, LayerMask: ObjectDetectorMask,    
+LayerMask: ObjectDetectorYOLO8, LayerMask: ObjectDetectorYOLOWorld, LayerMask: PersonMaskUltra, LayerMask: PersonMaskUltra V2,    
+LayerUtility: PhiPrompt, LayerUtility: PromptEmbellish, LayerUtility: PromptTagger, LayerUtility: CreateQRCode, LayerUtility: DecodeQRCode,    
+LayerUtility: QWenImage2Prompt, LayerMask: SAM2Ultra, LayerMask: SAM2VideoUltra, LayerUtility: SaveImagePlus, LayerUtility: SD3NegativeConditioning,    
+LayerMask: SegmentAnythingUltra, LayerMask: SegmentAnythingUltra V2, LayerMask: TransparentBackgroundUltra,     
+LayerUtility: UserPromptGeneratorTxt2ImgPrompt, LayerUtility: UserPromptGeneratorTxt2ImgPromptWithReference, LayerUtility: UserPromptGeneratorReplaceWord,    
+LayerUtility: AddBlindWaterMark, LayerUtility: ShowBlindWaterMark, LayerMask: YoloV8Detect
+
+* 合并[alexisrolland](https://github.com/alexisrolland) 提交的分支，添加Image Blend Advanced v3 和 Drop Shadow v3 节点，支持透明背景。
+* 添加[BenUltra](#BenUltra) 和 [LoadBenModel](#LoadBenModel)节点。这两个节点是[PramaLLC/BEN](https://huggingface.co/PramaLLC/BEN) 项目在ComfyUI中的实现。    
+从 [huggingface](https://huggingface.co/PramaLLC/BEN/tree/main) 或 [百度网盘](https://pan.baidu.com/s/17mdBxfBl_R97mtNHuiHsxQ?pwd=2jn3)下载```BEN_Base.pth``` 和 ```config.json``` 两个文件并复制到 ```ComfyUI/models/BEN```文件夹。
+* 合并[jimlee2048](https://github.com/jimlee2048)提交的PR, 添加[LoadBiRefNetModelV2](#LoadBiRefNetModelV2) 节点，支持加载RMBG 2.0模型。    
+从 [huggingface](https://huggingface.co/briaai/RMBG-2.0/tree/main) 或 [百度网盘](https://pan.baidu.com/s/1viIXlZnpTYTKkm2F-QMj_w?pwd=axr9) 下载全部文件并复制到```ComfyUI/models/BiRefNet/RMBG-2.0```文件夹。
+* Florence2 节点更新支持 base-PromptGen-v2.0 和 large-PromptGen-v2.0 模型。从 [huggingface](https://huggingface.co/chflame163/ComfyUI_LayerStyle/tree/main/ComfyUI/models/florence2) 或 [BaiduNetdisk](https://pan.baidu.com/s/1BVvXt3N7zrBnToyF-GrC_A?pwd=xm0x) 下载  ```base-PromptGen-v2.0``` 和 ```large-PromptGen-v2.0``` 两个文件夹并复制到 ```ComfyUI/models/florence2```。
+* [SAM2Ultra](#SAM2Ultra) 及 ObjectDetector 节点支持图像批次。
+* [SAM2Ultra](#SAM2Ultra) 及 [SAM2VideoUltra](#SAM2VideoUltra) 节点增加支持SAM2.1模型，包括[kijai](https://github.com/kijai)量化版fp16模型。请从请从[百度网盘](https://pan.baidu.com/s/1xaQYBA6ktxvAxm310HXweQ?pwd=auki) 或者 [huggingface.co/Kijai/sam2-safetensors](https://huggingface.co/Kijai/sam2-safetensors/tree/main)下载模型文件并复制到```ComfyUI/models/sam2```文件夹。 
+* 添加 [JoyCaption2Split](#JoyCaption2Split) 和 [LoadJoyCaption2Model](#LoadJoyCaption2Model) 节点，在多个JoyCaption2节点时共用模型提高效率。
+* [SegmentAnythingUltra](#SegmentAnythingUltra) 和 [SegmentAnythingUltraV2](#SegmentAnythingUltraV2) 增加 ```cache_model``` 参数，便于灵活管理显存。
+* 鉴于[LlamaVision](#LlamaVision)节点对 ```transformers``` 的要求版本较高而影响某些旧版第三方插件的加载，LayerStyle 插件已将默认要求降低到4.43.2， 如有运行LlamaVision的需求请自行升级至4.45.0以上。
+* 添加 [JoyCaption2](#JoyCaption2) 和 [JoyCaption2ExtraOptions](#JoyCaption2ExtraOptions) 节点，使用JoyCaption-alpha-two模型生成提示词。
+请从 [百度网盘](https://pan.baidu.com/s/1dOjbUEacUOhzFitAQ3uIeQ?pwd=4ypv) 以及 [百度网盘](https://pan.baidu.com/s/1mH1SuW45Dy6Wga7aws5siQ?pwd=w6h5) ， 
+或者 [huggingface/Orenguteng](https://huggingface.co/Orenguteng/Llama-3.1-8B-Lexi-Uncensored-V2/tree/main) 以及 [huggingface/unsloth](https://huggingface.co/unsloth/Meta-Llama-3.1-8B-Instruct/tree/main) 下载整个文件夹，并复制到ComfyUI/models/LLM,
+从 [百度网盘](https://pan.baidu.com/s/1pkVymOsDcXqL7IdQJ6lMVw?pwd=v8wp) 或者 [huggingface/google](https://huggingface.co/google/siglip-so400m-patch14-384/tree/main) 下载整个文件夹，并复制到ComfyUI/models/clip,
+从 [百度网盘](https://pan.baidu.com/s/12TDwZAeI68hWT6MgRrrK7Q?pwd=d7dh) 或者 [huggingface/John6666](https://huggingface.co/John6666/joy-caption-alpha-two-cli-mod/tree/main)下载 ```cgrkzexw-599808``` 文件夹，并复制到ComfyUI/models/Joy_caption。
+* 添加 [LlamaVision](#LlamaVision) 节点，使用Llama 3.2 视觉模型生成提示词。运行这个节点需要transformers升级到4.45.0以上。
+请从 [百度网盘](https://pan.baidu.com/s/18oHnTrkNMiwKLMcUVrfFjA?pwd=4g81) 或 [huggingface/SeanScripts](https://huggingface.co/SeanScripts/Llama-3.2-11B-Vision-Instruct-nf4/tree/main)下载整个文件夹，并复制到ComfyUI/models/LLM。
+* 添加 [RandomGeneratorV2](#RandomGeneratorV2) 节点，增加最小随机范围和种子选项。 
+* 添加 [TextJoinV2](#TextJoinV2) 节点，在TextJion基础上增加分隔符选项。
+* 添加 [GaussianBlurV2](#GaussianBlurV2) 节点，参数精度提升到0.01。
+* 添加 [UserPromptGeneratorTxtImgWithReference](#UserPromptGeneratorTxtImgWithReference) 节点。 
+* 添加 [GrayValue](#GrayValue) 节点，输出RGB色值对应的灰度值。
+* [LUT Apply](#LUT), [TextImageV2](#TextImageV2), [TextImage](#TextImage), [SimpleTextImage](#SimpleTextImage) 等节点支持在 ```resource_dir.ini``` 中定义多个文件夹，之间用逗号，分号或者空格分隔。同时支持刷新实时更新。
+* 添加 [HumanPartsUltra](#HumanPartsUltra) 节点，用于人物肢体分割。本节点是基于[metal3d/ComfyUI_Human_Parts](https://github.com/metal3d/ComfyUI_Human_Parts) 的重新封装，感谢原作者。
+请从[百度网盘](https://pan.baidu.com/s/1-6uwH6RB0FhIVfa3qO7hhQ?pwd=d862) 或 [huggingface](https://huggingface.co/Metal3d/deeplabv3p-resnet50-human/tree/main) 下载模型文件并复制到 ```ComfyUI\models\onnx\human-parts``` 文件夹。
+* ObjectDetector 节点添加按置信度排序选项。
+* 添加 [DrawBBoxMask](#DrawBBoxMask) 节点，用于将 ObjectDetector 节点输出的BBox转为遮罩。
+* 添加 [UserPromptGeneratorTxtImg](#UserPromptGeneratorTxtImg) 以及 [UserPromptGeneratorReplaceWord](#UserPromptGeneratorReplaceWord) 节点, 用于生成文生图提示词和替换提示词内容。
+* 添加 [PhiPrompt](#PhiPrompt) 节点，使用Micrisoft Phi 3.5文字及视觉模型进行本地推理。可以用于生成提示词，加工提示词或者反推图片的提示词。运行这个模型需要至少16GB的显存。        
+请从[百度网盘](https://pan.baidu.com/s/1BdTLdaeGC3trh1U3V-6XTA?pwd=29dh) 或者 [huggingface.co/microsoft/Phi-3.5-vision-instruct](https://huggingface.co/microsoft/Phi-3.5-vision-instruct/tree/main) 和 [huggingface.co/microsoft/Phi-3.5-mini-instruct](https://huggingface.co/microsoft/Phi-3.5-mini-instruct/tree/main) 下载全部模型文件并放到 ```ComfyUI\models\LLM``` 文件夹。
+* 添加 [GetMainColors](#GetMainColors) 节点，可获得图片的5个主要颜色。 添加 [ColorName](#ColorName) 节点，可获得颜色名称。
+* 复制 [Brightness & Contrast](#Brightness) 节点为 [BrightnessContrastV2](#BrightnessContrastV2), [Color of Shadow & Highlight](#Highlight) 节点为 [ColorofShadowHighlight](#HighlightV2), [Shadow & Highlight Mask](#Shadow) 为 [Shadow Highlight Mask V2](#ShadowV2), 以避免节点名称中的"&"字符造成ComfyUI工作流解析错误。 
+* 添加 [VQAPrompt](#VQAPrompt) 和 [LoadVQAModel](#LoadVQAModel) 节点。      
+请从[百度网盘](https://pan.baidu.com/s/1ILREVgM0eFJlkWaYlKsR0g?pwd=yw75) 或者 [huggingface.co/Salesforce/blip-vqa-capfilt-large](https://huggingface.co/Salesforce/blip-vqa-capfilt-large/tree/main) 和 [huggingface.co/Salesforce/blip-vqa-base](https://huggingface.co/Salesforce/blip-vqa-base/tree/main) 下载全部模型文件并放到 ```ComfyUI\models\VQA```文件夹。
+* [Florence2Ultra](#Florence2Ultra),  [Florence2Image2Prompt](#Florence2Image2Prompt) 和 [LoadFlorence2Model](#LoadFlorence2Model) 节点支持MiaoshouAI/Florence-2-large-PromptGen-v1.5 和 MiaoshouAI/Florence-2-base-PromptGen-v1.5 模型。
+请从[百度网盘](https://pan.baidu.com/s/1xOL6x6LijIMSh_3woErjJg?pwd=t3xa) 或者 [huggingface.co/MiaoshouAI/Florence-2-large-PromptGen-v1.5](https://huggingface.co/MiaoshouAI/Florence-2-large-PromptGen-v1.5/tree/main) 以及[huggingface.co/MiaoshouAI/Florence-2-base-PromptGen-v1.5](https://huggingface.co/MiaoshouAI/Florence-2-base-PromptGen-v1.5/tree/main) 下载全部模型文件并放到 ```ComfyUI\models\florence2```文件夹。 
+* 添加 [BiRefNetUltraV2](#BiRefNetUltraV2) 和 [LoadBiRefNetModel](#LoadBiRefNetModel) 节点，支持使用最新的BiRefNet模型。
+从[百度网盘](https://pan.baidu.com/s/12z3qUuqag3nqpN2NJ5pSzg?pwd=ek65) 或 [GoogleDrive](https://drive.google.com/drive/folders/1s2Xe0cjq-2ctnJBR24563yMSCOu4CcxM) 下载 ```BiRefNet-general-epoch_244.pth``` 到 ComfyUI/Models/BiRefNet/pth 文件夹。也可以下载更多的BiRefNet模型放到这里。
+* [ExtendCanvasV2](#ExtendCanvasV2) 节点支持负值输入，负值将被裁剪。
+* 节点默认标题颜色改为蓝绿色，LayerStyle, LayerColor, LayerMask, LayerUtility 和 LayerFilter 的节点分别用不同的颜色区分。
+* 合并 [heshengtao](https://github.com/heshengtao) 提交的PR, 添加[TextImageV2](#TextImageV2)节点，修改图片文字节点的缩放，字体间隔跟随缩放，坐标不再以文字左上角，而是整行文字的中心点。感谢作者的贡献。
+* ObjectDectector节点组增加sort bbox功能， 可按从左到右、从上到下、从大到小排序，选择物体更直观方便。昨天发布的节点已放弃，请手动更换为新版节点(对不起)。
+* 添加 [SAM2Ultra](#SAM2Ultra), [SAM2VideoUltra](#SAM2VideoUltra), [ObjectDetectorFL2](#ObjectDetectorFL2), [ObjectDetectorYOLOWorld](#ObjectDetectorYOLOWorld), [ObjectDetectorYOLO8](#ObjectDetectorYOLO8), [ObjectDetectorMask](#ObjectDetectorMask) 和 [BBoxJoin](#BBoxJoin)节点。
+请从[百度网盘](https://pan.baidu.com/s/1xaQYBA6ktxvAxm310HXweQ?pwd=auki) 或者 [huggingface.co/Kijai/sam2-safetensors](https://huggingface.co/Kijai/sam2-safetensors/tree/main)下载全部模型文件并复制到```ComfyUI/models/sam2```文件夹; 
+从 [百度网盘](https://pan.baidu.com/s/1QpjajeTA37vEAU2OQnbDcQ?pwd=nqsk) 或[GoogleDrive](https://drive.google.com/drive/folders/1nrsfq4S-yk9ewJgwrhXAoNVqIFLZ1at7?usp=sharing)下载模型文件并复制到```ComfyUI/models/yolo-world```文件夹。 
+本次更新引入了新的依赖，请重新安装依赖包。 
+* 添加 [RandomGenerator](#RandomGenerator) 节点，用于生成指定范围内的随机数，有int，float，bool输出，支持按图片批量生成不同的随机数。
+* 添加 [EVF-SAMUltra](#EVFSAMUltra) 节点，是[EVF-SAM](https://github.com/hustvl/EVF-SAM)在ComfyUI中的实现。请从[百度网盘](https://pan.baidu.com/s/1EvaxgKcCxUpMbYKzLnEx9w?pwd=69bn) 或者 [huggingface/EVF-SAM2](https://huggingface.co/YxZhang/evf-sam2/tree/main), [huggingface/EVF-SAM](https://huggingface.co/YxZhang/evf-sam/tree/main) 下载全部模型文件并复制到```ComfyUI/models/EVF-SAM```文件夹(请将模型保存在各自子目录中)。
+由于引入了新的依赖，插件升级后请重新安装依赖包。
+* 添加 [ImageTaggerSave](#ImageTaggerSave) 和 [ImageAutoCropV3](#ImageAutoCropV3) 节点，用于实现训练集自动裁切打标工作流(工作流```image_tagger_save_example.json```在workflow目录中)。
+* 添加 [CheckMaskV2](#CheckMaskV2) 节点，增加了```simple```方法以更快速检测遮罩。
+* 添加 [ImageReel ](#ImageReel) 和 [ImageReelComposit](#ImageReelComposit) 节点，可将多张图片显示在一起。
+* [NumberCalculatorV2](#NumberCalculatorV2) 和 [NumberCalculator](#NumberCalculator) 节点增加 ```min``` 和 ```max``` 方法。
+* 优化节点加载速度。    
+* [Florence2Image2Prompt](#Florence2Image2Prompt) 增加thwri/CogFlorence-2-Large-Freeze 和 thwri/CogFlorence-2.1-Large 模型支持。请从[百度网盘](https://pan.baidu.com/s/1hzw9-QiU1vB8pMbBgofZIA?pwd=mfl3) 或 [huggingface/CogFlorence-2-Large-Freeze](https://huggingface.co/thwri/CogFlorence-2-Large-Freeze/tree/main) 和 [huggingface/CogFlorence-2.1-Large](https://huggingface.co/thwri/CogFlorence-2.1-Large/tree/main) 下载模型文件并复制到```ComfyUI/models/florence2```文件夹。 
+* 合并来自[ClownsharkBatwing](https://github.com/ClownsharkBatwing)的分支“使用GPU进行颜色混合模式”，某些图层的混合速度提高了十倍以上。
+* 添加 [Florence2Ultra](#Florence2Ultra),  [Florence2Image2Prompt](#Florence2Image2Prompt) 和 [LoadFlorence2Model](#LoadFlorence2Model) 节点。
+* [TransparentBackgroundUltra](#TransparentBackgroundUltra) 节点增加新模型支持。请按说明下载模型文件。
+* 添加 [SegformerUltraV2](#SegformerUltraV2), [SegfromerFashionPipeline](#SegfromerFashionPipeline) 和 [SegformerClothesPipeline](#SegformerClothesPipeline) 节点, 用于分割服饰。请按说明下载模型文件。
+* 添加 ```install_requirements.bat``` 和 ```install_requirements_aki.bat``` 文件, 一键解决安装依赖包问题。
+* 添加[TransparentBackgroundUltra](#TransparentBackgroundUltra) 节点，基于transparent-background模型，用于去除背景。
+* [Ultra](#Ultra) 节点的VitMatte模型改为本地调用，请下载[所有的vitmatte模型文件](https://huggingface.co/hustvl/vitmatte-small-composition-1k/tree/main)到```ComfyUI/models/vitmatte```文件夹。
 * [GetColorToneV2](#GetColorToneV2) 节点的取色选项增加```mask```方法，可精确获取遮罩内的主色和平均色。
 * [ImageScaleByAspectRatioV2](#ImageScaleByAspectRatioV2) 节点增加background_color选项。 
 * [LUT Apply](#LUT) 节点增加strenght选项。
@@ -117,7 +259,7 @@ git clone https://github.com/chflame163/ComfyUI_LayerStyle.git
 * [ImageScaleRestoreV2](#ImageScaleRestoreV2), [ImageScaleByAspectRatioV2](#ImageScaleByAspectRatioV2), [ImageAutoCropV2](#ImageAutoCropV2)节点增加```width```和```height```选项，可指定宽度或高度为固定值。
 * 添加 [PurgeVRAM](#PurgeVRAM) 节点, 清理显存和内存。
 * 添加 [AutoAdjust](#AutoAdjust) 节点, 自动调整图片对比度和白平衡。
-* 添加 [RGBValue](#RGBValue) 节点, 将色值输出为单独的R, G, B三个10进制数值。这个想法来自[vxinhao](https://github.com/vxinhao/color2rgb)，感谢。
+* 添加 [RGBValue](#RGBValue) 节点, 将色值输出为单独的R, G, B三个10进制数值。这个想法来自[vxinhao](https://github.com/vxinhao/color2rgb)。
 * 添加[seed](#seed) 节点，输出种子值。[ImageMaskScaleAs](#ImageMaskScaleAs), [ImageScaleBySpectRatio](#ImageScaleBySpectRatio), [ImageScaleBySpectRatioV2](#ImageScaleBySpectRatioV2), [ImageScaleRestore](#ImageScaleRestore), [ImageScaleRestoreV2](#ImageScaleRestoreV2) 节点增加```width```, ```height``` 输出。
 * 添加 [Levels](#Levels) 节点, 可以实现与Photoshop相同的色阶调整功能。[Sharp&Soft](#Sharp)增加"None"选项。
 * 添加 [BlendIfMask](#BlendIfMask) 节点，该节点与 ImgaeBlendV2 或者 ImageBlendAdvanceV2 配合，可以实现与Photoshop相同的混合颜色带功能。
@@ -362,7 +504,10 @@ git clone https://github.com/chflame163/ComfyUI_LayerStyle.git
 * color_space: 普通图片请选择linear, log色彩空间的图片请选择log。
 * strength: 范围0~100, LUT应用强度。数值越大，与原图的差别越大, 数值越小，越接近原图。
 
-<sup>*</sup><font size="3">LUT文件夹在```resource_dir.ini```中定义，这个文件位于插件根目录下, 默认名字是```resource_dir.ini.example```, 初次使用这个文件需将文件后缀改为.ini。用文本编辑软件打开，找到“LUT_dir=”开头的这一行，编辑“=”之后为自定义文件夹路径名。这个文件夹里面所有的.cube文件将在ComfyUI初始化时被收集并显示在节点的列表中。如果ini中设定的文件夹无效，将启用插件自带的LUT文件夹。</font>
+<sup>*</sup><font size="3">LUT文件夹在```resource_dir.ini```中定义，这个文件位于插件根目录下, 默认名字是```resource_dir.ini.example```, 初次使用这个文件需将文件后缀改为.ini。
+用文本编辑软件打开，找到“LUT_dir=”开头的这一行，编辑“=”之后为自定义文件夹路径名。这个文件夹里面所有的.cube文件将在ComfyUI初始化时被收集并显示在节点的列表中。
+支持定义多个文件夹，之间用逗号，分号或者空格分隔。
+如果ini中设定的文件夹无效，将启用插件自带的LUT文件夹。</font>
 
 
 ### <a id="table1">AutoAdjust</a>
@@ -431,6 +576,9 @@ git clone https://github.com/chflame163/ComfyUI_LayerStyle.git
 * highlight_level_offset: 亮部取值的偏移量，更小的数值使更多靠近阴暗的区域纳入亮部。
 * highlight_range: 亮部的过渡范围。
 
+### Color of Shadow <a id="table1">HighlightV2</a>
+Color of Shadow & Highlight 节点的复制品，去掉了节点名称中的"&"字符以避免ComfyUI工作流解析错误。
+
 ### <a id="table1">ColorTemperature</a>
 ![image](image/color_temperature_example.jpg)    
 改变图像的色温。
@@ -481,6 +629,8 @@ git clone https://github.com/chflame163/ComfyUI_LayerStyle.git
 * contrast: 图像的对比度。
 * saturation: 图像的色彩饱和度。
 
+### <a id="table1">BrightnessContrastV2</a>
+```Brightness & Contrast```节点的复制品，去掉了节点名称中的"&"字符以避免ComfyUI工作流解析错误。
 
 ### <a id="table1">RGB</a>
 对图像的RGB各通道进行调整。
@@ -648,6 +798,13 @@ ImageScaleRestore的V2升级版。
 * width: 输出图片的宽。
 * height: 输出图片的高。
 
+### <a id="table1">ImageMaskScaleAsV2</a>
+ImageMaskScaleAs的升级版，在原节点基础上增加背景颜色设置。
+![image](image/image_mask_scale_as_v2_example.jpg)    
+
+新增选项:   
+![image](image/image_mask_scale_as_v2_node.jpg)    
+* background_color: 扩展背景颜色。
 
 ### <a id="table1">ImageScaleByAspectRatio</a>
 将图像或遮罩按宽高比缩放。可设置将缩放后的尺寸按8或者16的倍数取整，可按长边尺寸缩放。
@@ -682,43 +839,60 @@ ImageScaleByAspectRatio的V2升级版
 * scale_to_length: 这里的数值作为scale_to_side指定边的长度, 或者总像素数量(kilo pixels)。
 * background_color<sup>4</sup>: 背景色。
 
-
-### <a id="table1">QWenImage2Prompt</a>
-根据图片反推提示词。这个节点是[ComfyUI_VLM_nodes](https://github.com/gokayfem/ComfyUI_VLM_nodes)中的```UForm-Gen2 Qwen Node```节点的重新封装，感谢原作者。
-请从[huggingface](https://huggingface.co/unum-cloud/uform-gen2-qwen-500m)或者[百度网盘](https://pan.baidu.com/s/1ztnVX_Sh800xsWZhMDe-Ww?pwd=esyt)下载模型到```ComfyUI/models/LLavacheckpoints/files_for_uform_gen2_qwen```文件夹。
-
-![image](image/qwen_image2prompt_example.jpg)    
+### <a id="table1">ICMask</a>
+用于生成一致性上下文图片和遮罩。代码来自[lrzjason/Comfyui-In-Context-Lora-Utils](https://github.com/lrzjason/Comfyui-In-Context-Lora-Utils) 感谢原作者@小志Jason
+![image](image/icmask_example.jpg)
 
 节点选项说明:   
-* question: 对UForm-Gen-QWen模型的提示词。
+![image](image/icmask_node.jpg)    
 
+* first_image: 用作上下文参考的图像。
+* first_mask: 可选输入，上下文参考图像的遮罩。
+* second_image: 用于重绘的图像。
+* second_mask: 用于重绘的图像的遮罩。
+* patch_mode: 拼接模式，有三种模式：auto、patch_right 和 patch_bottom。patch_right为左右拼接，patch_bottom为上下拼接，auto为自动模式。
+* output_length: 输出图像的长边尺寸。
+* patch_color: 填充颜色。
 
-### <a id="table1">PromptTagger</a>
-根据图片反推提示词，可以设置替换词。这个节点目前使用Google Gemini API作为后端服务，请确保网络环境可以正常使用Gemini。
-请在[Google AI Studio](https://makersuite.google.com/app/apikey)申请你的API key, 并将其填到```api_key.ini```, 这个文件位于插件根目录下, 默认名字是```api_key.ini.example```, 初次使用这个文件需将文件后缀改为.ini。用文本编辑软件打开，在```google_api_key=```后面填入你的API key并保存。
-![image](image/prompt_tagger_example.jpg)    
+输出:
+* image: 输出图像。
+* mask: 输出遮罩。
+* icmask_data: 图像的拼接信息，用于后续节点进行自动裁切。
 
-节点选项说明:   
-![image](image/prompt_tagger_node.jpg)    
-
-* api: 使用的Api。有"gemini-1.5-flash"和"google-gemini"两个选项。
-* token_limit: 生成提示词的最大token限制。
-* exclude_word: 需要排除的关键词。
-* replace_with_word: 替换exclude_word的关键词。
-
-### <a id="table1">PromptEmbellish</a>
-输入简单的提示词，输出经过润色的提示词，支持输入图片作为参考，支持中文输入。这个节点目前使用Google Gemini API作为后端服务，请确保网络环境可以正常使用Gemini。
-请在[Google AI Studio](https://makersuite.google.com/app/apikey)申请你的API key, 并将其填到```api_key.ini```, 这个文件位于插件根目录下, 默认名字是```api_key.ini.example```, 初次使用这个文件需将文件后缀改为.ini。用文本编辑软件打开，在```google_api_key=```后面填入你的API key并保存。
-![image](image/prompt_embellish_example.jpg)    
+### <a id="table1">ICMaskCropBack</a>
+对ICMask生成的图像推理输出进行裁切。
 
 节点选项说明:   
-![image](image/prompt_embellish_node.jpg)    
+![image](image/icmask_crop_back_node.jpg)    
 
-* image: 可选项，输入图像作为提示词参考。
-* api: 使用的Api。有"gemini-1.5-flash"和"google-gemini"两个选项。
-* token_limit: 生成提示词的最大token限制。
-* discribe: 在这里输入简单的描述。支持中文。
+* image: 图像输入。
+* icmask_data: 从ICMask输出的拼接信息。
 
+
+### <a id="table1">VQAPrompt</a>
+使用blip-vqa模型进行视觉问答。本节点的部分代码参考自[celoron/ComfyUI-VisualQueryTemplate](https://github.com/celoron/ComfyUI-VisualQueryTemplate)，感谢原作者。    
+*请从[百度网盘](https://pan.baidu.com/s/1ILREVgM0eFJlkWaYlKsR0g?pwd=yw75) 或者 [huggingface.co/Salesforce/blip-vqa-capfilt-large](https://huggingface.co/Salesforce/blip-vqa-capfilt-large/tree/main) 和 [huggingface.co/Salesforce/blip-vqa-base](https://huggingface.co/Salesforce/blip-vqa-base/tree/main) 下载全部模型文件并放到 ```ComfyUI\models\VQA```文件夹。
+
+![image](image/vqa_prompt_example.jpg) 
+
+节点选项说明:
+![image](image/vqa_prompt_node.jpg)
+
+* image: 图片输入。
+* vqa_model: vqa模型输入。从[LoadVQAModel](#LoadVQAModel)节点加载模型。
+* question: 任务文本输入。单个的问题用大括号"{}"包围，该问题的答案将在原位置替换问题文本输出。可以在一次问答中使用多个问题分别用大括号定义。
+例如, 对于一个物品放在场景中的图片，问题为:"{object color} {object} on the {scene}"。
+
+
+### <a id="table1">LoadVQAModel</a>
+加载blip-vqa模型。    
+
+节点选项说明:
+![image](image/load_vqa_model_node.jpg)
+
+* model: 目前有两种模型可选，"blip-vqa-base"和"blip-vqa-capfilt-large"。
+* precision: 模型精度，有"fp16"和"fp32"两个选项。
+* device: 模型运行设备，有"cpu"和"cuda"两个选项。
 
 ### <a id="table1">ImageShift</a>
 使图片产生位移。此节点支持位移接缝遮罩的输出，方便制作连续贴图。
@@ -749,6 +923,44 @@ ImageScaleByAspectRatio的V2升级版
 * blend_mode<sup>3</sup>: 图层混合模式。
 * opacity: 不透明度。
 * [节点注解](#节点注解)
+
+### <a id="table1">ImageReel</a>
+将多张图片显示在一个卷轴中。可为卷轴中的每张图片添加文字注解。配合[ImageReelComposite](#ImageReelComposit)节点可将多个卷轴拼合为一张图片。
+![image](image/image_reel_example.jpg)    
+
+节点选项说明:   
+![image](image/image_reel_node.jpg)    
+* image1: 第一张图片。必须输入。
+* image2: 第二张图片。可选输入图片。
+* image3: 第三张图片。可选输入图片。
+* image4: 第四张图片。可选输入图片。
+* image1_text: 第一张图片的文字注解。
+* image2_text: 第二张图片的文字注解。
+* image3_text: 第三张图片的文字注解。
+* image4_text: 第四张图片的文字注解。
+* reel_height: 卷轴高度。
+* border: 卷轴中图片的边框宽度。
+
+输出：
+* reel:卷轴，用于输入[ImageReelComposite](#ImageReelComposit)节点。 
+
+### <a id="table1">ImageReelComposite</a>
+将多个卷轴拼合为一张图片。
+
+节点选项说明:   
+![image](image/image_reel_composit_node.jpg)    
+* reel_1: 第一个卷轴。必须输入。
+* reel_2: 第二个卷轴。可选输入。
+* reel_3: 第三个卷轴。可选输入。
+* reel_4: 第四个卷轴。可选输入。
+* font_file<sup>*</sup>: 字体文件。
+* border: 卷轴的边框宽度。
+* color_theme: 主题色。    
+<sup>*</sup>font文件夹在```resource_dir.ini```中定义，这个文件位于插件根目录下, 默认名字是```resource_dir.ini.example```, 初次使用这个文件需将文件后缀改为.ini。
+用文本编辑软件打开，找到“FONT_dir=”开头的这一行，编辑“=”之后为自定义文件夹路径名。
+支持定义多个文件夹，之间用逗号，分号或者空格分隔。
+文件夹里面所有的.ttf和.otf文件将在ComfyUI初始化时被收集并显示在节点的列表中。
+如果ini中设定的文件夹无效，将启用插件自带的font文件夹。
 
 ### <a id="table1">ImageOpacity</a>
 调整图像不透明度。
@@ -787,33 +999,73 @@ ImageScaleByAspectRatio的V2升级版
 节点选项说明:
 * color_value： 支持十六进制(HEX)或十进制(DEC)色值，应是string或tuple类型，强行接入其他类型将导致错误。
 
-### <a id="table1">GetColorTone</a>
-从图片中获取主颜色或平均色。
-![image](image/get_color_tone_example.jpg)    
+### <a id="table1">GrayValue</a>
+将色值输出灰度数值。支持输出256级和100级灰度值。
+![image](image/gray_value_node.jpg)    
 
 节点选项说明:
-![image](image/get_color_tone_node.jpg)    
-* mode： 模式，有两种可选择，主颜色main_color和平均色average。
+* color_value： 支持十六进制(HEX)或十进制(DEC)色值，应是string或tuple类型，强行接入其他类型将导致错误。
+
+输出：
+* gray(256_level): 256级灰度值。整数类型，范围0~255。
+* gray(100_level): 100级灰度值。整数类型，范围0~100。
+
+
+### <a id="table1">GetMainColors</a>
+获得图片的主色。可获得5个颜色。
+![image](image/get_main_color_and_color_name_example.jpg)
+![image](image/get_main_colors_example.jpg)
+
+节点选项:
+![image](image/get_main_color_node.jpg)    
+* image: 图片输入。
+* k_means_algorithm: K-Means 算法选项。 "lloyd" 为标准K-Means算法， "elkan" 为三角不等式算法，适合更大的图片。
 
 输出:
-* RGB color in HEX: 使用16进制RGB字符串格式描述，例如 '#FA3D86'。
-* HSV color in list: HSV颜色值，使用list格式描述。
+* preview_image: 5个主色预览图片。
+* color_1~color_5: 色值输出。输出格式为HEX格式的RGB字符串。
 
-### <a id="table1">GetColorToneV2</a>
-GetColorTone的V2升级版。可以指定获取主体或背景的主色或平均色。
-![image](image/get_color_tone_v2_example.jpg)
-![image](image/get_color_tone_v2_example2.jpg)
+### <a id="table1">GetMainColorsV2</a>
+在[GetMainColors](#GetMainColors)节点基础上增加按颜色面积排序，并在预览图片中显示色值和颜色面积。
+这部分代码由@HL完善，感谢。
+![image](image/get_main_color_v2_example.jpg)
 
-在GetColorTong基础上做了如下改变:
-![image](image/get_color_tone_v2_node.jpg)    
-* color_of: 提供4个选项，mask, entire, background和subject, 分别表示选择遮罩区域，整个图片，背景，或主体的颜色。
-* remove_background_method: 背景识别的方法, 有BiRefNet和RMBG V1.4两种可以选择。
-* invert_mask: 是否反转遮罩。
-* mask_grow: 遮罩扩张。对于subject, 更大的值使获得的颜色更接近主体中心的颜色。
+
+### <a id="table1">ColorName</a>
+根据色值输出调色盘里最近似的颜色名称。
+![image](image/color_name_example.jpg)
+
+节点选项:
+![image](image/color_name_node.jpg)    
+* color: 颜色色值输入，格式为HEX格式的RGB字符串。
+* palette: 调色板。 有xkcd、wiki_color、flux_sdxl、css4、css3以及html4多种色彩映射表可选。
 
 输出:
-* image: 纯色图片输出, 尺寸与输入的图片相同。
-* mask: 遮罩输出。
+* color_name: 颜色名称，格式为字符串。
+
+### <a id="table1">NameToColor</a>
+从颜色名称输出彩色图片以及色值。
+![image](image/name_to_color_example.jpg)
+
+节点选项:
+![image](image/name_to_color_node.jpg)
+* size_as<sup>*</sup>: 此处输入图像或遮罩，将按照其尺寸生成输出图像。注意，此输入优先级高于其他的尺寸设置。
+* color_name: 颜色名称。
+* palette: 调色板。 有xkcd、wiki_color、flux_sdxl、css4、css3以及html4多种色彩映射表可选。
+* in_palette_only: 是否只输出调色盘内的颜色。如果设置为True，仅在当前调色盘内搜索，如果没有匹配名称，输出default_color。
+如果设置为False，在全部调色盘搜索，如果在所有调色盘中都没有匹配名称，则输出一个最近似名称的颜色。
+* default_color: 默认颜色。如果没有搜索到匹配名称，则输出该颜色。
+* size<sup>**</sup>: 尺寸预设。预设可以用户自定义。如果有size_as输入，此处选项将被忽略。
+* custom_width: 图像宽度。当size设置为"custom"时有效。如果有size_as输入，此处选项将被忽略。
+* custom_height: 图像高度。当size设置为"custom"时有效。如果有size_as输入，此处选项将被忽略。
+
+<sup>*</sup>仅限输入image和mask, 如果强制接入其他类型输入，将导致节点错误。
+<sup>**</sup>预设尺寸在custom_size.ini中定义，这个文件位于插件根目录下。用文本编辑软件打开，编辑自定义尺寸。每行表示一个尺寸，第一个数值是宽度，第二个是高度，中间用小写的"x"分隔。为避免错误请不要输入多余的字符。
+
+输出:
+* image: 彩色图片。
+* color: 色值，格式为HEX格式的RGB字符串。
+
 
 ### <a id="table1">ExtendCanvas</a>
 扩展画布。
@@ -826,12 +1078,12 @@ GetColorTone的V2升级版。可以指定获取主体或背景的主色或平均
 * bottom: 底部扩展值。
 * left: 左侧扩展值。
 * right: 右侧扩展值。
-* color; 画布颜色
+* color: 画布颜色
 
 ### <a id="table1">ExtendCanvasV2</a>
 ExtendCanvas的V2升级版。
 
-在ExtendCanvas基础上修改了color为字符串类型，支持外接```ColorPicker```输入。
+在ExtendCanvas基础上修改了color为字符串类型，支持外接```ColorPicker```输入。支持负值输入，负值将被裁剪。
 ![image](image/extend_canvas_v2_node.jpg)    
 
 
@@ -923,18 +1175,26 @@ GradientImage的V2升级版。
 <sup>**</sup>预设尺寸在```custom_size.ini```中定义，这个文件位于插件根目录下, 默认名字是```custom_size.ini.example```, 初次使用这个文件需将文件后缀改为.ini。用文本编辑软件打开，编辑自定义尺寸。每行表示一个尺寸，第一个数值是宽度，第二个是高度，中间用小写的"x"分隔。为避免错误请不要输入多余的字符。
 
 
-### <a id="table1">ImageRewardFilter</a>
-![image](image/image_reward_filter_example.jpg)    
-对批量图片评分并输出排名靠前的图片。这个节点使用了[ImageReward](https://github.com/THUDM/ImageReward)作为图片评分，感谢原作者。
+### <a id="table1">RoundedRectangle</a>
+![image](image/rounded_rectangle_example.jpg)    
+生成圆角矩形及遮罩。
 
-![image](image/image_reward_filter_node.jpg)    
+![image](image/rounded_rectangle_node.jpg)    
 节点选项说明:
-* prompt: 可选输入。将prompt在此输入将作为依据判定其与图片的符合程度。
-* output_nun: 输出的图片数量。此数值应小于图片批量。
-
-输出：
-* images: 按评分顺序从高到低输出的批量图片。
-* obsolete_images: 淘汰的图片。同样按评分顺序从高到低输出。
+* image: 图片输入。
+* object_mask: 可选输入。可由此遮罩生成圆角矩形区域。如果```crop_box```有输入，则此选项将被忽略。
+* crop_box: 可选输入。可由此裁剪区域生成圆角矩形区域。
+* rounded_rect_radius: 圆角矩形半径。范围0-100, 数值越大圆角越明显。
+* anti_aliasing: 抗锯齿，范围从0-16，数值越大，锯齿越不明显。过高的数值将显著降低节点的处理速度。
+* top: 圆角矩形顶部边距，为图片高度的百分比，允许设置负值。如果有crop_box或者object_mask输入，此选项将被忽略。
+* bottom: 圆角矩形底部边距，为图片高度的百分比，允许设置负值。如果有crop_box或者object_mask输入，此选项将被忽略。
+* left: 圆角矩形左侧边距，为图片宽度的百分比，允许设置负值。如果有crop_box或者object_mask输入，此选项将被忽略。
+* right: 圆角矩形右侧边距，为图片宽度的百分比，允许设置负值。如果有crop_box或者object_mask输入，此选项将被忽略。
+* detect: 当object_mask输入时，检测遮罩区域的方法。```min_bounding_rect```是大块形状最小外接矩形, ```max_inscribed_rect```是大块形状最大内接矩形, ```mask_area```是遮罩像素有效区域。
+* obj_ext_top: 当object_mask或crop_box输入时，圆角矩形区域顶部外扩范围，为区域高度的百分比，允许设置负值。
+* obj_ext_bottom: 当object_mask或crop_box输入时，圆角矩形区域底部外扩范围，为区域高度的百分比，允许设置负值。
+* obj_ext_left: 当object_mask或crop_box输入时，圆角矩形区域左侧外扩范围，为区域宽度的百分比，允许设置负值。
+* obj_ext_right: 当object_mask或crop_box输入时，圆角矩形区域右侧外扩范围，为区域宽度的百分比，允许设置负值。
 
 
 ### <a id="table1">SimpleTextImage</a>
@@ -958,12 +1218,12 @@ GradientImage的V2升级版。
 * width: 画面的宽度。如果有size_as输入，此设置将被忽略。
 * height: 画面的高度。如果有size_as输入，此设置将被忽略。
 
-
 <sup>*</sup>仅限输入image和mask, 如果强制接入其他类型输入，将导致节点错误。
-<sup>**</sup>font文件夹在```resource_dir.ini```中定义，这个文件位于插件根目录下, 默认名字是```resource_dir.ini.example```, 初次使用这个文件需将文件后缀改为.ini。用文本编辑软件打开，找到“FONT_dir=”开头的这一行，编辑“=”之后为自定义文件夹路径名。这个文件夹里面所有的.ttf和.otf文件将在ComfyUI初始化时被收集并显示在节点的列表中。如果ini中设定的文件夹无效，将启用插件自带的font文件夹。
-
-
-
+<sup>**</sup>font文件夹在```resource_dir.ini```中定义，这个文件位于插件根目录下, 默认名字是```resource_dir.ini.example```, 初次使用这个文件需将文件后缀改为.ini。 
+用文本编辑软件打开，找到“FONT_dir=”开头的这一行，编辑“=”之后为自定义文件夹路径名。
+支持定义多个文件夹，之间用逗号，分号或者空格分隔。
+文件夹里面所有的.ttf和.otf文件将在ComfyUI初始化时被收集并显示在节点的列表中。
+如果ini中设定的文件夹无效，将启用插件自带的font文件夹。
 
 ### <a id="table1">TextImage</a>
 ![image](image/text_image_example.jpg)    
@@ -986,24 +1246,17 @@ GradientImage的V2升级版。
 * text_color: 文字颜色。
 * background_color<sup>4</sup>: 背景颜色。
 
-
 <sup>*</sup>仅限输入image和mask, 如果强制接入其他类型输入，将导致节点错误。
-<sup>**</sup>font文件夹在```resource_dir.ini```中定义，这个文件位于插件根目录下, 默认名字是```resource_dir.ini.example```, 初次使用这个文件需将文件后缀改为.ini。用文本编辑软件打开，找到“FONT_dir=”开头的这一行，编辑“=”之后为自定义文件夹路径名。这个文件夹里面所有的.ttf和.otf文件将在ComfyUI初始化时被收集并显示在节点的列表中。如果ini中设定的文件夹无效，将启用插件自带的font文件夹。
+<sup>**</sup>font文件夹在```resource_dir.ini```中定义，这个文件位于插件根目录下, 默认名字是```resource_dir.ini.example```, 初次使用这个文件需将文件后缀改为.ini。
+用文本编辑软件打开，找到“FONT_dir=”开头的这一行，编辑“=”之后为自定义文件夹路径名。
+支持定义多个文件夹，之间用逗号，分号或者空格分隔。
+文件夹里面所有的.ttf和.otf文件将在ComfyUI初始化时被收集并显示在节点的列表中。
+如果ini中设定的文件夹无效，将启用插件自带的font文件夹。
 
+### <a id="table1">TextImageV2</a>
+![image](image/text_image_v2_node.jpg)    
+本节点合并自 [heshengtao](https://github.com/heshengtao) 提交的PR, 在TextImage节点基础上，修改图片文字节点的缩放，字体间隔跟随缩放，坐标不再以文字左上角，而是整行文字的中心点。感谢作者的贡献。
 
-### <a id="table1">LaMa</a>
-![image](image/lama_example.jpg)    
-根据图像遮罩擦除物体。本节点是对[IOPaint](https://www.iopaint.com)的封装，由 SOTA AI 模型提供支持， 感谢原作者。   
-提供[LaMa](https://github.com/advimman/lama), [LDM](https://github.com/CompVis/latent-diffusion), [ZITS](https://github.com/DQiaole/ZITS_inpainting),[MAT](https://github.com/fenglinglwb/MAT),  [FcF](https://github.com/SHI-Labs/FcF-Inpainting), [Manga](https://github.com/msxie92/MangaInpainting) 模型以及 SPREAD 擦除方法。请查看链接了解各个模型的介绍。  
-请下载模型文件 [lama models(百度网盘)](https://pan.baidu.com/s/1LllR9TJHP1G9uEwWT3Mvkg?pwd=tvzv) 或者 [lama models(Google Drive)](https://drive.google.com/drive/folders/1Aq0a4sybb3SRxi7j1e1_ZbBRjaWDdP9e?usp=sharing), 将文件放到```ComfyUI/models/lama```
-
-节点选项说明:
-![image](image/lama_node.jpg)    
-* lama_model: 选择模型或方法。
-* device: 在正确安装torch和Nvidia CUDA驱动程序后，使用cuda将明显提高运行速度。
-* invert_mask: 是否反转遮罩。
-* grow: 遮罩扩张幅度。正值是向外扩张，负值是向内收缩。
-* blur: 遮罩模糊幅度。
 
 ### <a id="table1">ImageChannelSplit</a>
 ![image](image/image_channel_split_example.jpg)    
@@ -1038,44 +1291,6 @@ GradientImage的V2升级版。
 将图片与遮罩合并为包含alpha通道的RGBA模式的图片。
 
 
-### <a id="table1">ImageAutoCrop</a>
-![image](image/image_auto_crop_example.jpg)    
-自动抠图并按照遮罩裁切图片。可指定生成图片的背景颜色、长宽比和大小。这个节点是为生成训练模型的图片素材而设计的。  
-*请参照 [SegmentAnythingUltra](#SegmentAnythingUltra) 和 [RemBgUltra](#RemBgUltra) 节点的模型安装方法安装模型。 
-
-
-节点选项说明:
-![image](image/image_auto_crop_node.jpg)    
-* background_color<sup>4</sup>: 背景颜色。
-* aspect_ratio: 输出的宽高比。这里提供了常见的画幅比例， "custom"为自定义比例。
-* proportional_width: 比例宽。如果aspect_ratio选项不是"custom"，此处设置将被忽略。
-* proportional_height: 比例高。如果aspect_ratio选项不是"custom"，此处设置将被忽略。
-* scale_by_longest_side: 允许按长边尺寸缩放。
-* longest_side: scale_by_longest_side被设置为True时，此项将作为是图像长边的长度。
-* detect: 探测方法，min_bounding_rect是最小外接矩形, max_inscribed_rect是最大内接矩形。
-* border_reserve: 保留边框。在探测到的遮罩主体区域之外扩展裁切范围。
-* ultra_detail_range: 遮罩边缘超精细处理范围，0为不处理，可以节省生成时间。
-* matting_method: 生成遮罩的方法。有Segment Anything和 RMBG 1.4两种方法。RMBG 1.4运行速度更快。
-* sam_model: 此处选择Segment Anything所使用的sam模型。
-* grounding_dino_model: 此处选择Segment Anything所使用的grounding_dino模型。
-* sam_threshold: Segment Anything的阈值。
-* sam_prompt: Segment Anything的提示词。
-
-输出:
-cropped_image: 裁切并更换背景后的图像。
-box_preview: 裁切位置预览。
-cropped_mask: 裁切后的遮罩。
-
-### <a id="table1">ImageAutoCropV2</a>
-
-```ImageAutoCrop```的V2升级版，在之前基础上做了如下改变：  
-![image](image/image_auto_crop_v2_node.jpg)    
-
-* 增加```mask```可选输入。当有mask输入时，直接使用该输入跳过内置遮罩生成。
-* 增加```fill_background```, 当此项设置为False时将不处理背景，并且超出画幅的部分不纳入输出范围。
-* ```aspect_ratio```增加```original```(原始画面宽高比)选项。
-* scale_by: 允许按长边、短边、宽度或高度指定尺寸缩放。
-* scale_by_length: 这里的数值作为scale_by指定边的长度。
 
 ### <a id="table1">HLFrequencyDetailRestore</a>
 使用低频滤波加保留高频来恢复图像细节。相比[kijai's DetailTransfer](https://github.com/kijai/ComfyUI-IC-Light), 这个节点在保留细节的同时，与环境的融合度更好。
@@ -1100,6 +1315,10 @@ cropped_mask: 裁切后的遮罩。
 * height: 图像高度。
 * original_size: 图像的原始大小数据，用于后续节点进行恢复。
 
+### <a id="table1">AnyRerouter</a>
+![image](image/any_rerouter_node.jpg)    
+用于将任意类型数据中转转发，这个节点允许任意类型的输入。
+
 ### <a id="table1">ImageHub</a>
 从多路输入图片和遮罩中切换其中一组输出，支持9组输入。所有的输入项都是可选项。如果一组输入中只有image或者只有mask, 缺失项将输出为None。
 ![image](image/image_hub_example.jpg)    
@@ -1122,10 +1341,39 @@ cropped_mask: 裁切后的遮罩。
 注意:如果数值超出批量，将输出最后一张。如果没有对应的输入，将输出一个空的64x64图片或64x64黑色遮罩。
 
 
+### <a id="table1">ChoiceTextPreset</a>
+从预设文本字典选择输出。
+![image](image/choice_text_preset_example.jpg)    
+
+节点选项说明:  
+![image](image/chioce_text_preset_node.jpg)    
+* text_preset: 预设的文本。由[TextPreseter](#TextPreseter) 节点设置输出。
+* choice_title: 选择预设标题，将输出此标题对应的文本内容。
+* random_choice: 是否随机选择预设。
+* default: 默认输出文本，0对应第一段，依次类推。注意此数值超出预设文本段落长度将导致错误。
+* seed: 随机选择时使用的随机种子。
+* control_after_generate: 是否在每次运行时改变种子。
+
+输出:
+* title: 文本段落标题。
+* content: 文本段落内容。
+
+### <a id="table1">TextPreseter</a>
+预设文本字典，每个节点设置一段文本，支持多个节点串联。    
+
+节点选项说明:  
+![image](image/text_preseter_node.jpg)    
+* text_preset: 预设的文本，可选输入。多个预设文本节点可以串联。
+* title: 文本段落标题。
+* content: 文本段落内容。
+
 ### <a id="table1">TextJoin</a>
 ![image](image/text_join_example.jpg)    
 将多段文字组合为一段。
 
+### <a id="table1">TextJoinV2</a>
+![image](image/text_join_v2_node.jpg)    
+在[TextJoin](#TextJoin) 的基础上增加了分隔符选项。
 
 ### <a id="table1">PrintInfo</a>
 ![image](image/print_info_node.jpg)    
@@ -1152,6 +1400,41 @@ cropped_mask: 裁切后的遮罩。
 ### <a id="table1">Boolean</a>
 ![image](image/boolean_node.jpg)    
 输出一个布尔值。
+
+### <a id="table1">RandomGenerator</a>
+用于生成指定范围内的随机数，有int，float，bool输出，支持批量和列表，支持按图片批量生成一组不同的随机数列表。
+![image](image/random_generator_example.jpg)    
+
+节点选项说明:
+![image](image/random_generator_node.jpg)  
+* image: 可选输入，按照图片批量生成数量相符的随机数列表。
+* min_value：最小值。随机数将从最小值到最大值之间随机取值。
+* max_value：最大值。随机数将从最小值到最大值之间随机取值。
+* float_decimal_places：浮点数精度。
+* fix_seed:是否固定随机数种子。如果此选项固定，生成的随机数将始终相同。
+
+输出:
+int: 整数随机数。
+float: 浮点数随机数。
+bool: 布尔随机数。
+
+### <a id="table1">RandomGeneratorV2</a>
+在[RandomGenerator](#RandomGenerator) 的基础上，增加了最小随机范围选项，以及seed选项。
+
+节点选项说明:
+![image](image/random_generator_v2_node.jpg)  
+* image: 可选输入，按照图片批量生成数量相符的随机数列表。
+* min_value：最小值。随机数将从最小值到最大值之间随机取值。
+* max_value：最大值。随机数将从最小值到最大值之间随机取值。
+* least: 最小随机范围。随机数将至少取到该值。
+* float_decimal_places：浮点数精度。
+* seed: 随机数种子。
+* control_after_generate: 种子值变化选项。如果此选项固定，生成的随机数将始终相同。
+
+输出:
+int: 整数随机数。
+float: 浮点数随机数。
+bool: 布尔随机数。
 
 ### <a id="table1">NumberCalculator</a>
 ![image](image/number_calculator_node.jpg)    
@@ -1185,7 +1468,7 @@ BooleanOperator的升级版，增加了节点内数值输入，增加了大于�
 节点选项说明:    
 ![image](image/string_condition_node.jpg)  
 * text: 输入的文本。
-* condition: 判断条件。```include```判断是否包含子字符串，```exclude```判断是否不包含子字符串。
+* condition: 判断条件。```include```判断是否包含子字符串，```exclude```判断是否不包含子字符串, ```equal```判断是否与子字符串相等。
 * sub_string: 子字符串文本。
 
 
@@ -1196,6 +1479,13 @@ BooleanOperator的升级版，增加了节点内数值输入，增加了大于�
 ![image](image/check_mask_node.jpg)    
 * white_point: 判断遮罩是否有效的白点值，高于此值被计入有效。
 * area_percent: 有效区域所占百分比。检测有效区域占比超过此值则输出True。
+
+### <a id="table1">CheckMaskV2</a>
+在CheckMask基础上增加了```method```选项，可以选择不同的检测方法。area_percent改为浮点数，精度为小数点后2位，可检测更小的有效区域。
+
+节点选项说明:    
+![image](image/check_mask_v2_node.jpg)    
+* method: 检测方法，有```simple``` 和 ```detect_percent``` 两种。simple方法仅检测mask是否全黑，detect_percent方法检测有效区域占比。
 
 ### <a id="table1">If</a>
 ![image](image/if_example.jpg)    
@@ -1237,90 +1527,34 @@ BooleanOperator的升级版，增加了节点内数值输入，增加了大于�
 ### <a id="table1">PurgeVRAM</a>
 ![image](image/purge_vram_example.jpg)    
 清理GPU显存。可以接入任意类型的输入，当执行到这个节点时将清理VRAM以及RAM中的垃圾对象。通常放置在推理任务完成的节点之后，例如VAE Decode节点。
+此节点为强制执行，即接在此节点之前的所有节点都将被执行。
 
 节点选项说明:  
 * purge_cache: 清理缓存。
 * purge_models: 清理已加载的模型。
 
+### <a id="table1">PurgeVRAMV2</a>
+![image](image/purge_vram_v2_example.jpg)    
+与PurgeVRAM不同，此节点不是强制执行，可在流程中接入任意输入，并保持原输出，灵活清理。
 
-### <a id="table1">SaveImagePlus</a>
-![image](image/saveimage_plus_example.jpg)    
-增强版的保存图片节点。可自定义保存图片的目录，文件名增加时间戳，选择保存格式，设置图片压缩率，设置是否保存工作流，以及可选给图片添加隐形水印(以肉眼无法觉察的方式添加信息，使用配套的```ShowBlindWaterMark```节点可以解码水印)。可选择是否同时输出工作流的json文件。
+### <a id="table1">ImageTaggerSave</a>  
+![image](image/image_tagger_save_example.jpg)  
+用于保存训练集图片及其文本标签的节点，图片文件和文本标签文件具有相同的文件名。可自定义保存图片的目录，文件名增加时间戳，选择保存格式，设置图片压缩率。
+*工作流image_tagger_save_example.json在workflow目录中。
 
 节点选项说明:
-![image](image/saveimage_plus_node.jpg)    
+![image](image/image_tagger_save_node.jpg)      
 * iamge: 输入的图片。
+* tag_text: 文本标签。
 * custom_path<sup>*</sup>: 用户自定义目录，请按正确的格式输入目录名。如果为空则保存在ComfyUI默认的output目录。
 * filename_prefix<sup>*</sup>:文件名前缀。。
 * timestamp: 为文件名加上时间戳，可选择日期、时间到秒和时间到毫秒。
-* format:图片保存格式。目前提供png和jpg两种。注意RGBA模式的图片仅支持png格式。
+* format:图片保存格式。目前提供png和jpg两种。
 * quality:图片质量，数值范围10-100，数值越高，图片质量越好，文件的体积也对应增大。
-* meta_data:是否保存元数据即工作流信息到png文件。如果不希望泄露工作流，请把这里设置为false。
-* blind_watermark:这里输入的文字（不支持多语言）将被转换为二维码作为隐形水印保存，使用```ShowBlindWaterMark```节点可以解码水印。注意有水印的图片建议保存为png格式，质量较低的jpg格式将导致水印信息丢失。
-* save_workflow_as_json: 是否同时输出工作流为json文件(输出的json与图片在同一目录)。
 * preview: 预览开关。
 
 <sup>*</sup>输入```%date```表示当前日期(YY-mm-dd)，```%time```表示当前时间(HH-MM-SS)。可以输入```/```表示子目录。例如```%date/name_%time``` 将输出图片到```YY-mm-dd```文件夹下，以```name_HH-MM-SS```为文件名前缀。
 
-### <a id="table1">AddBlindWaterMark</a>
-![image](image/watermark_example.jpg)    
-给图片添加隐形水印。以肉眼无法觉察的方式添加水印图片，使用```ShowBlindWaterMark```节点可以解码水印。
-
-节点选项说明:
-![image](image/add_blind_watermark_node.jpg)    
-* iamge: 输入的图片。
-* watermark_image: 水印图片。这里输入的图片将自动转为正方形的黑白图片作为水印。建议使用二维码作为水印。
-
-
-### <a id="table1">ShowBlindWaterMark</a>
-对```AddBlindWaterMark``` 和 ```SaveImagePlus``` 节点添加的隐形水印解码。
-![image](image/show_blind_watermark_node.jpg)    
-
-
-### <a id="table1">CreateQRCode</a>
-生成一个正方形的二维码图片。
-
-节点选项说明:  
-![image](image/create_qrcode_node.jpg)    
-* size: 生成图片的边长。
-* border: 二维码四周边框的大小，数值越大，边框越宽。
-* text: 这里输入二维码文字内容，不支持多语言。
-
-### <a id="table1">DecodeQRCode</a>
-解码二维码。
-
-节点选项说明:  
-![image](image/decode_qrcode_node.jpg)    
-* image: 输入二维码图片。
-* pre_blur: 预模糊，对难以识别的二维码可以尝试调整此数值。
-
-### <a id="table1">LoadPSD</a>
-![image](image/load_image_example_psd_file.jpg)    
-![image](image/load_image_example.jpg)    
-加载PSD格式文件，并导出图层。
-注意这个节点需要安装psd_tools依赖包，如果安装psd_tool中出现```ModuleNotFoundError: No module named 'docopt'```错误，请下载[docopt的whl](https://www.piwheels.org/project/docopt/)手动安装。
-
-节点选项说明:  
-![image](image/load_image_node.jpg)    
-* image: 这里列出了```ComfyUI/input```下的*.psd文件，之前加载过的psd图片可以从这里选择。
-* file_path: psd文件的完整路径以及文件名。
-* include_hidden_layer: 是否包括隐藏图层。
-* find_layer_by: 查找图层的方法，可选择按图层索引编号或者图层名称查找。图层组被作为一个图层对待。
-* layer_index: 图层索引编号，0是最下面的图层，依次递增。如果include_hidden_layer设置为false，隐藏的图层不计入。设为-1则输出最上层的图层。
-* layer_name: 图层名称。注意大小写和标点符号必须完全匹配。
-
-输出:
-flat_image: psd预览图。
-layer_iamge: 查找的图层输出。
-all_layers: 包含全部图层的批量图片。
-
-### <a id="table1">SD3NegativeConditioning</a>
-![image](image/sd3_negative_conditioning_node_note.jpg)  
-把SD3的Negative Conditioning 的4个节点封装为一个单独节点。
-
-节点选项说明:  
-![image](image/sd3_negative_conditioning_node.jpg)    
-* zero_out_start: 设置Negative ConditioningZeroOut的ConditioningSetTimestepRange start值, 此数值与Negative的ConditioningSetTimestepRange end值相同。
 
 
 # <a id="table1">LayerMask</a>
@@ -1370,57 +1604,20 @@ mask为可选输入项，如果这里输入遮罩，将作用于输出结果。
 * ```GuideFilter``` 使用 opencv guidedfilter 根据颜色相似度对边缘进行羽化，对于边缘具有很强的颜色分离时效果最佳。    
 以上两种方法的代码来着spacepxl的[ComfyUI-Image-Filters](https://github.com/spacepxl/ComfyUI-Image-Filters)的Alpha Matte节点，感谢原作者。
 * ```VitMatte``` 使用transfromer vit模型进行高质量的边缘处理，保留边缘细节，甚至可以生成半透明遮罩。
-注：首次运行时需要下载vitmatte模型文件，等待自动下载完成即可。如果无法完成下载，可运行命令```huggingface-cli download hustvl/vitmatte-small-composition-1k```手动下载模型。
-模型成功下载之后可以使用VITMatte(local)无需访问网络。
 * VitMatte的选项:```device``` 设置是否使用cuda进行vitmatte运算，cuda运算速度比cpu快5倍左右。```max_megapixels```设置vitmatte运算的最大图片尺寸，超大的图片将缩小处理。对于16G显存建议设置为3。
+
+*请从 [百度网盘](https://pan.baidu.com/s/1xYF-V6QRwcFalEqLS7giWg?pwd=jiyz) 或者 [Huggingface](https://huggingface.co/hustvl/vitmatte-small-composition-1k/tree/main) 下载全部模型文件到```ComfyUI/models/vitmatte```文件夹。
 
 下图为三种方法输出区别的示例。
 ![image](image/mask_edge_ultra_detail_v2_example.jpg)   
 
 
-### <a id="table1">SegmentAnythingUltra</a>
-对[ComfyUI Segment Anything](https://github.com/storyicon/comfyui_segment_anything)的改进，使遮罩有更具细节的边缘，感谢原作者。
-*请参照ComfyUI Segment Anything的安装方法安装模型。如果已经正确安装了ComfyUI Segment Anything，可跳过此步骤。
-* 从 [这里](https://huggingface.co/bert-base-uncased/tree/main) 下载 config.json，model.safetensors，tokenizer_config.json，tokenizer.json 和 vocab.txt 5个文件到 ```ComfyUI/models/bert-base-uncased```文件夹。
-* 下载 [GroundingDINO_SwinT_OGC config file](https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/GroundingDINO_SwinT_OGC.cfg.py), [GroundingDINO_SwinT_OGC model](https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/groundingdino_swint_ogc.pth), 
-[GroundingDINO_SwinB config file](https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/GroundingDINO_SwinB.cfg.py), [GroundingDINO_SwinB model](https://huggingface.co/ShilongLiu/GroundingDINO/resolve/main/groundingdino_swinb_cogcoor.pth) 到 ```ComfyUI/models/grounding-dino```文件夹。
-* 下载 [sam_vit_h](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth)，[sam_vit_l](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth), 
-[sam_vit_b](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth), [sam_hq_vit_h](https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_h.pth),
-[sam_hq_vit_l](https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_l.pth), [sam_hq_vit_b](https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_b.pth), 
-[mobile_sam](https://github.com/ChaoningZhang/MobileSAM/blob/master/weights/mobile_sam.pt) 这几个文件到```ComfyUI/models/sams```文件夹。
-
-![image](image/segment_anything_ultra_compare.jpg)    
-![image](image/segment_anything_ultra_example.jpg)    
-
-节点选项说明:  
-![image](image/segment_anything_ultra_node.jpg)    
-* sam_model: 选择SAM模型。
-* ground_dino_model: 选择Grounding DINO模型。
-* threshold: SAM阈值。
-* detail_range: 边缘细节范围。
-* black_point: 边缘黑色采样阈值。
-* white_point: 边缘黑色采样阈值。
-* process_detail: 此处设为False将跳过边缘处理以节省运行时间。
-* prompt: SAM的prompt输入。
-
-### <a id="table1">SegmentAnythingUltraV2</a>
-SegmentAnythingUltra的V2升级版，增加了VITMatte边缘处理方法。
-![image](image/ultra_v2_nodes_example.jpg)    
-
-在SegmentAnythingUltra的基础上做了如下改变:  
-![image](image/segment_anything_ultra_v2_node.jpg)    
-* detail_method: 边缘处理方法。提供了VITMatte, VITMatte(local), PyMatting, GuidedFilter。
-* detail_erode: 遮罩边缘向内侵蚀范围。数值越大，向内修复的范围越大。
-* detail_dilate: 遮罩边缘向外扩张范围。数值越大，向外修复的范围越大。
-* device: 设置是否使用cuda。
-* max_megapixels: 设置vitmatte运算的最大尺寸。
 
 ### <a id="table1">RemBgUltra</a>
 去除背景。与类似的背景移除节点相比，这个节点具有超高的边缘细节。
 本节点结合了spacepxl的[ComfyUI-Image-Filters](https://github.com/spacepxl/ComfyUI-Image-Filters)的Alpha Matte节点，以及ZHO-ZHO-ZHO的[ComfyUI-BRIA_AI-RMBG](https://github.com/ZHO-ZHO-ZHO/ComfyUI-BRIA_AI-RMBG)的功能，感谢原作者。
 
-*将[BRIA Background Removal v1.4](https://huggingface.co/briaai/RMBG-1.4)模型文件(model.pth)下载至```ComfyUI/models/rmbg/RMBG-1.4```文件夹。该模型由 BRIA AI 开发，可作为非商业用途的开源模型。    
-
+*请从 [BRIA Background Removal v1.4](https://huggingface.co/briaai/RMBG-1.4)  或者 [百度网盘](https://pan.baidu.com/s/16PMfjpkXn_35T-cVYEPTZA?pwd=qi6o)下载模型文件至```ComfyUI/models/rmbg/RMBG-1.4```文件夹。该模型由 BRIA AI 开发，可作为非商业用途的开源模型。    
 
 ![image](image/rembg_ultra_example.jpg)    
 
@@ -1428,7 +1625,7 @@ SegmentAnythingUltra的V2升级版，增加了VITMatte边缘处理方法。
 ![image](image/rembg_ultra_node.jpg)    
 * detail_range: 边缘细节范围。
 * black_point: 边缘黑色采样阈值。
-* white_point: 边缘黑色采样阈值。
+* white_point: 边缘白色采样阈值。
 * process_detail: 此处设为False将跳过边缘处理以节省运行时间。
 
 ### <a id="table1">RmBgUltraV2</a>
@@ -1442,62 +1639,12 @@ RemBgUltra的V2升级版，增加了VITMatte边缘处理方法。
 * device: 设置是否使用cuda。
 * max_megapixels: 设置vitmatte运算的最大尺寸。
 
-### <a id="table1">BiRefNetUltra</a>
-使用BiRefNet模型去除背景，有更好的识别能力，同时具有超高的边缘细节。
-本节点模型部分的代码来自vipery的[ComfyUI-BiRefNet](https://github.com/viperyl/ComfyUI-BiRefNet)，感谢原作者。
-
-*从[https://huggingface.co/ViperYX/BiRefNet](https://huggingface.co/ViperYX/BiRefNet/tree/main)下载```BiRefNet-ep480.pth```,```pvt_v2_b2.pth```,```pvt_v2_b5.pth```,```swin_base_patch4_window12_384_22kto1k.pth```, ```swin_large_patch4_window12_384_22kto1k.pth```5个文件至```ComfyUI/models/BiRefNet```文件夹。
-
-![image](image/birefnet_ultra_example.jpg)    
-
-节点选项说明:  
-![image](image/birefnet_ultra_node.jpg)    
-* detail_method: 边缘处理方法。提供了VITMatte, VITMatte(local), PyMatting, GuidedFilter。如果首次使用VITMatte后模型已经下载，之后可以使用VITMatte(local)。
-* detail_erode: 遮罩边缘向内侵蚀范围。数值越大，向内修复的范围越大。
-* detail_dilate: 遮罩边缘向外扩张范围。数值越大，向外修复的范围越大。
-* black_point: 边缘黑色采样阈值。
-* white_point: 边缘黑色采样阈值。
-* process_detail: 此处设为False将跳过边缘处理以节省运行时间。
-* device: 设置是否使用cuda。
-* max_megapixels: 设置vitmatte运算的最大尺寸。
-
-### <a id="table1">PersonMaskUltra</a>
-为人物生成脸、头发、身体皮肤、衣服或配饰的遮罩。与之前的A Person Mask Generator节点相比，这个节点具有超高的边缘细节。
-本节点的模型代码来自[a-person-mask-generator](https://github.com/djbielejeski/a-person-mask-generator)，边缘处理代码来自spacepxl的[ComfyUI-Image-Filters](https://github.com/spacepxl/ComfyUI-Image-Filters)，感谢原作者。
-
-![image](image/person_mask_ultra_example.jpg)    
-
-节点选项说明:  
-![image](image/person_mask_ultra_node.jpg)    
-* face: 脸部识别。
-* hair: 头发识别。
-* body: 身体皮肤识别。
-* clothes: 衣服识别。
-* accessories: 配饰(例如背包)识别。
-* background: 背景识别。
-* confidence: 识别阈值，更低的值将输出更多的遮罩范围。
-* detail_range: 边缘细节范围。
-* black_point: 边缘黑色采样阈值。
-* white_point: 边缘黑色采样阈值。
-* process_detail: 此处设为False将跳过边缘处理以节省运行时间。
-
-### <a id="table1">PersonMaskUltraV2</a>
-PersonMaskUltra的V2升级版，增加了VITMatte边缘处理方法。
-
-在PersonMaskUltra的基础上做了如下改变:  
-![image](image/person_mask_ultra_v2_node.jpg)    
-* detail_method: 边缘处理方法。提供了VITMatte, VITMatte(local), PyMatting, GuidedFilter。如果首次使用VITMatte后模型已经下载，之后可以使用VITMatte(local)。
-* detail_erode: 遮罩边缘向内侵蚀范围。数值越大，向内修复的范围越大。
-* detail_dilate: 遮罩边缘向外扩张范围。数值越大，向外修复的范围越大。
-* device: 设置是否使用cuda。
-* max_megapixels: 设置vitmatte运算的最大尺寸。
-
 ### <a id="table1">SegformerB2ClothesUltra</a>
 ![image](image/segformer_ultra_example.jpg)   
 为人物生成脸、头发、手臂、腿以及服饰的遮罩，主要用于分割服装。模型分割代码来自[StartHua](https://github.com/StartHua/Comfyui_segformer_b2_clothes)，感谢原作者。
 与comfyui_segformer_b2_clothes节点相比，这个节点具有超高的边缘细节。    
 
-*从[https://huggingface.co/mattmdjaga/segformer_b2_clothes](https://huggingface.co/mattmdjaga/segformer_b2_clothes)下载全部文件至```ComfyUI/models/segformer_b2_clothes```文件夹。
+*从[huggingface](https://huggingface.co/mattmdjaga/segformer_b2_clothes/tree/main) 或者 [百度网盘](https://pan.baidu.com/s/1OK-HfCNyZWux5iQFANq9Rw?pwd=haxg) 下载全部文件至```ComfyUI/models/segformer_b2_clothes```文件夹。
 
 节点选项说明:  
 ![image](image/segformer_ultra_node.jpg)    
@@ -1520,10 +1667,136 @@ PersonMaskUltra的V2升级版，增加了VITMatte边缘处理方法。
 * detail_erode: 遮罩边缘向内侵蚀范围。数值越大，向内修复的范围越大。
 * detail_dilate: 遮罩边缘向外扩张范围。数值越大，向外修复的范围越大。
 * black_point: 边缘黑色采样阈值。
-* white_point: 边缘黑色采样阈值。
+* white_point: 边缘白色采样阈值。
 * process_detail: 此处设为False将跳过边缘处理以节省运行时间。
 * device: 设置是否使用cuda。
 * max_megapixels: 设置vitmatte运算的最大尺寸。
+
+
+### <a id="table1">SegformerUltraV2</a>
+![image](image/segformer_clothes_example.jpg)   
+![image](image/segformer_fashion_example.jpg)   
+使用segformer模型分割服饰，具有超高的边缘细节。目前支持segformer b2 clothes, segformer b3 clothes, segformer b3 fashion。
+
+*从[huggingface](https://huggingface.co/mattmdjaga/segformer_b2_clothes/tree/main) 或者 [百度网盘](https://pan.baidu.com/s/1OK-HfCNyZWux5iQFANq9Rw?pwd=haxg) 下载全部文件至```ComfyUI/models/segformer_b2_clothes```文件夹。     
+*从[huggingface](https://huggingface.co/sayeed99/segformer_b3_clothes/tree/main) 或者 [百度网盘](https://pan.baidu.com/s/18KrCqNqUwmoJlqgAGDTw9g?pwd=ap4z) 下载全部文件至```ComfyUI/models/segformer_b3_clothes```文件夹。    
+*从[huggingface](https://huggingface.co/sayeed99/segformer-b3-fashion/tree/main) 或者 [百度网盘](https://pan.baidu.com/s/10vd5PmJLFNWXaRVGW6tSvA?pwd=xzqi)下载全部文件至```ComfyUI/models/segformer_b3_fashion```文件夹。    
+
+节点选项说明:  
+![image](image/segformer_ultra_v2_node.jpg)    
+* image: 图像输入。
+* segformer_pipeline: segformer管线输入。管线由SegformerClothesPipeline和SegformerFashionPipeline节点输出。
+* detail_method: 边缘处理方法。提供了VITMatte, VITMatte(local), PyMatting, GuidedFilter。如果首次使用VITMatte后模型已经下载，之后可以使用VITMatte(local)。
+* detail_erode: 遮罩边缘向内侵蚀范围。数值越大，向内修复的范围越大。
+* detail_dilate: 遮罩边缘向外扩张范围。数值越大，向外修复的范围越大。
+* black_point: 边缘黑色采样阈值。
+* white_point: 边缘白色采样阈值。
+* process_detail: 此处设为False将跳过边缘处理以节省运行时间。
+* device: 设置是否使用cuda。
+* max_megapixels: 设置vitmatte运算的最大尺寸。
+
+### <a id="table1">SegformerClothesPipiline</a>
+选择segformer clothes模型，并选择分割内容。    
+
+节点选项说明:  
+![image](image/segformer_clothes_pipeline_node.jpg)    
+* model: 模型选择。目前有两种模型可供选择segformer b2 clothes, segformer b3 clothes。
+* face: 脸部识别。
+* hair: 头发识别。
+* hat: 帽子识别。
+* sunglass: 墨镜识别。
+* left_arm:左手臂识别。
+* right_arm:右手臂识别。
+* left_leg:左腿识别。
+* right_leg:右腿识别。
+* left_shoe: 左鞋子识别。
+* right_shoe: 右鞋子识别。
+* skirt:短裙识别。
+* pants:裤子识别。
+* dress:连衣裙识别。
+* belt:腰带识别。
+* bag:背包识别。
+* scarf:围巾识别。
+
+### <a id="table1">SegformerFashionPipiline</a>
+选择segformer fashion模型，并选择分割内容。    
+
+节点选项说明:  
+![image](image/segformer_fashion_pipeline_node.jpg)    
+* model: 模型选择。目前只有一种模型可供选择segformer b3 fashion。
+* shirt: 衬衫、罩衫识别。
+* top: 上衣、t恤、运动衫识别。
+* sweater: 毛衣识别。
+* cardigan: 开襟毛衫识别。
+* jacket: 夹克识别。
+* vest: 背心识别。
+* pants: 裤子识别。
+* shorts: 短裤识别。
+* skirt: 短裙识别。
+* coat: 外套识别。
+* dress: 连衣裙识别。
+* jumpsuit: 连身裤识别。
+* cape: 斗篷识别。
+* glasses: 眼镜识别。
+* hat: 帽子识别。
+* hairaccessory: 头带、头巾、发饰识别。
+* tie: 领带识别。
+* glove: 手套识别。
+* watch: 手表识别。
+* belt: 皮带识别。
+* legwarmer: 腿套识别。
+* tights: 紧身裤和长筒袜识别。
+* sock: 袜子识别。
+* shoe: 鞋子识别。
+* bagwallet: 背包、钱包识别。
+* scarf: 围巾识别。
+* umbrella: 雨伞识别。
+* hood: 兜帽识别。
+* collar: 衣领识别。
+* lapel: 翻领识别。
+* epaulette: 肩章识别。
+* sleeve: 袖子识别。
+* pocket: 口袋识别。
+* neckline: 领口识别。
+* buckle: 带扣识别。
+* zipper: 拉链识别。
+* applique: 贴花识别。
+* bead: 珠子识别。
+* bow: 蝴蝶结识别。
+* flower: 花识别。
+* fringe: 刘海识别。
+* ribbon: 丝带识别。
+* rivet: 铆钉识别。
+* ruffle: 褶饰识别。
+* sequin: 亮片识别。
+* tassel: 流苏识别。
+
+
+### <a id="table1">SegformerUltraV3</a>   
+在SegformerUltraV2基础上，修改为模型与设置分离加载，在使用多个节点时节省资源。请注意设置的类型必须与模型匹配。
+
+修改的节点选项:  
+![image](image/segfromer_ultra_v3_node.jpg)
+* segformer_model: Segformer模型输入，模型由LoadSegformerModel节点加载。
+* segformer_setting: Segformer Label设置输入。
+
+### <a id="table1">SegformerClothesSetting</a>
+![image](image/segformer_clothes_setting_node.jpg)
+与 SegformerUltraV3 配套的SegformerClothes设置节点。在SegformerClothesPipiline节点基础上删除了model 选项。 
+
+
+### <a id="table1">SegformerFashionSetting</a>
+![image](image/segformer_fashion_pipeline_node.jpg)    
+与 SegformerUltraV3 配套的SegformerFashion设置节点。在SegformerFashionPipiline节点基础上删除了model 选项。
+
+### <a id="table1">LoadSegformerModel</a>
+与 SegformerUltraV3 配套的模型加载节点。    
+
+节点选项说明:  
+![image](image/load_segfromer_model_node.jpg)    
+* model_name: 模型选择。目前有三种模型可供选择segformer b2 clothes, segformer b3 clothes 和 segformer b3 fashion。
+* devicee: 加载设备选择。
+
 
 ### <a id="table1">MaskEdgeUltraDetail</a>
 处理较粗糙的遮罩使其获得超精细边缘。
@@ -1537,7 +1810,7 @@ PersonMaskUltra的V2升级版，增加了VITMatte边缘处理方法。
 * fix_threshold: 修补遮罩的阈值。
 * detail_range: 边缘细节范围。
 * black_point: 边缘黑色采样阈值。
-* white_point: 边缘黑色采样阈值。
+* white_point: 边缘白色采样阈值。
 
 ### <a id="table1">MaskEdgeUltraDetailV2</a>
 MaskEdgeUltraDetail的V2升级版，增加了VITMatte边缘处理方法，此方法适合处理半透明区域。 
@@ -1548,36 +1821,6 @@ MaskEdgeUltraDetail的V2升级版，增加了VITMatte边缘处理方法，此方
 * edge_dilate: 遮罩边缘向外扩张范围。数值越大，向外修复的范围越大。
 * device: 设置是否使用cuda。
 * max_megapixels: 设置vitmatte运算的最大尺寸。
-
-### <a id="table1">YoloV8Detect</a>
-使用YoloV8模型检测人脸、手部box区域，或者人物分割。支持输出所选择数量的通道。
-请在 [GoogleDrive](https://drive.google.com/drive/folders/1I5TISO2G1ArSkKJu1O9b4Uvj3DVgn5d2) 或者 [百度网盘](https://pan.baidu.com/s/1ImoJrzL1zDgaCqaSzrNEtw?pwd=5xgk) 下载模型文件并放到 ```ComfyUI/models/yolo``` 文件夹。
-
-![image](image/yolov8_detect_example.jpg)    
-
-节点选项说明:  
-![image](image/yolov8_detect_node.jpg)    
-* yolo_model: yolo模型选择。带有```seg```名字的模型可以输出分割的mask, 否则只能输出box区域的遮罩。
-* mask_merge: 选择合并的遮罩。```all```是合并全部遮罩输出。选数值是输出多少个遮罩，按识别置信度排序合并输出。
-
-输出:
-* mask: 输出的遮罩。
-* yolo_plot_image: yolo识别结果预览图。
-* yolo_masks: yolo识别出来的所有遮罩，每个单独的遮罩输出为一个mask。
-
-
-### <a id="table1">MediapipeFacialSegment</a>
-使用Mediapipe模型检测人脸五官，分割左右眉、眼睛、嘴唇和牙齿。
-![image](image/mediapipe_facial_segment_example.jpg)    
-
-节点选项说明:  
-![image](image/mediapipe_facial_segment_node.jpg)    
-* left_eye: 左眼识别开关。
-* left_eyebrow: 左眉识别开关。
-* right_eye: 右眼识别开关。
-* right_eyebrow: 右眉识别开关。
-* lips: 嘴唇识别开关。
-* tooth: 牙齿识别开关。
 
 
 ### <a id="table1">MaskByColor</a>
@@ -1611,8 +1854,6 @@ MaskEdgeUltraDetail的V2升级版，增加了VITMatte边缘处理方法，此方
 
 <sup>*</sup><font size="3">如果 black_point 或 output_black_point 数值大于 white_point 或 output_white_point，则两个数值将交换，较大的数值作为white_point使用，较小的数值作为black_point使用。</font>    
 
-
-
 ### <a id="table1">Shadow</a> & Highlight Mask
 生成图像暗部和亮部的遮罩。
 ![image](image/shadow_and_highlight_mask_example.jpg)    
@@ -1626,6 +1867,8 @@ MaskEdgeUltraDetail的V2升级版，增加了VITMatte边缘处理方法，此方
 * highlight_level_offset: 亮部取值的偏移量，更小的数值使更多靠近阴暗的区域纳入亮部。
 * highlight_range: 亮部的过渡范围。  
 
+### <a id="table1">Shadow</a> Highlight Mask V2
+Shadow & Highlight Mask 节点的复制品，去掉了节点名称中的"&"字符以避免ComfyUI工作流解析错误。
 
 ### <a id="table1">PixelSpread</a>
 对图像的遮罩边缘部分进行像素扩张预处理，可有效改善图像合成的边缘。
@@ -1635,17 +1878,6 @@ MaskEdgeUltraDetail的V2升级版，增加了VITMatte边缘处理方法，此方
 ![image](image/pixel_spread_node.jpg)    
 * invert_mask: 是否反转遮罩。
 * mask_grow: 遮罩扩张幅度。
-
-### <a id="table1">MaskByDifferent</a>
-计算两张图像不同之处，并输出为遮罩。
-![image](image/mask_by_different_example.jpg)    
-
-节点选项说明:  
-![image](image/mask_by_different_node.jpg)    
-* gain: 计算增益。调高此值，微弱的差异将更显著的呈现。
-* fix_gap: 修补遮罩内部缝隙。更高的值将修补更大的缝隙。
-* fix_threshold: 修补阈值。
-* main_subject_detect: 此项设为True将开启主体侦测，忽略主体之外的差异。
 
 
 ### <a id="table1">MaskGrow</a>
@@ -1712,7 +1944,6 @@ MaskGrow与MaskEdgeShrink效果对比
 
 <sup>*</sup>仅限输入image和mask, 如果强制接入其他类型输入，将导致节点错误。  
 
-
 ### <a id="table1">MaskStroke</a>
 产生mask轮廓描边。
 ![image](image/mask_stroke_example.jpg)    
@@ -1733,16 +1964,13 @@ MaskGrow与MaskEdgeShrink效果对比
 * grain: 噪声强度。
 * invert_mask: 是否反转遮罩。
 
-
 ### <a id="table1">MaskPreview</a>
 预览mask
 ![image](image/mask_invert.jpg)    
 
-
 ### <a id="table1">MaskInvert</a>
 mask反转
 ![image](image/mask_invert_node.jpg)    
-
 
 
 # <a id="table1">LayerFilter</a>
@@ -1775,6 +2003,21 @@ mask反转
 ![image](image/water_color_node.jpg)    
 * line_density: 线条密度。
 * opacity: 水彩效果的不透明度。
+
+### <a id="table1">HalfTone</a>
+将图片转为半色调效果。
+![image](image/halftone_example.jpg)    
+
+节点选项说明:
+![image](image/halftone_node.jpg)    
+* image: 图片输入。
+* mask: 可选遮罩输入。
+* dot_size: 点的大小。
+* angle: 点的排列角度。
+* shape: 点的形状。有3个选项：circle、diamond、square。
+* dot_color: 点的颜色。
+* background_color: 背景颜色。
+* anti_alias: 反锯齿强度。更高的值将使点的边缘更平滑，同时增加处理时间。
 
 
 ### <a id="table1">SoftLight</a>
@@ -1838,9 +2081,8 @@ mask反转
 Film节点的升级版, 在之前基础上增加了fastgrain方法，生成噪点速度加快了10倍。fastgrain的代码来自[github.com/spacepxl/ComfyUI-Image-Filters](https://github.com/spacepxl/ComfyUI-Image-Filters)的BetterFilmGrain部分，感谢原作者。
 ![image](image/film_v2_node.jpg)    
 
-
 ### <a id="table1">LightLeak</a>
-模拟胶片漏光效果。请下载[light_leak.pkl(百度网盘)](https://pan.baidu.com/s/1QY1ZyYm885krrqDB2t8lPg?pwd=yvs3)或[light_leak.pkl(Google Drive)(https://drive.google.com/file/d/1DcH2Zkyj7W3OiAeeGpJk1eaZpdJwdCL-/view?usp=sharing)将文件复制到```ComfyUI/models/layerstyle``` 文件夹。
+模拟胶片漏光效果。请从 [百度网盘](https://pan.baidu.com/s/18Z0lhsDAejbwlOrCZFMuNg?pwd=o8sz) 或 [Google Drive](https://drive.google.com/file/d/1DcH2Zkyj7W3OiAeeGpJk1eaZpdJwdCL-/view?usp=sharing) 下载模型文件并复制到 ```ComfyUI/models/layerstyle``` 文件夹。
 ![image](image/light_leak_example.jpg)    
 
 节点选项说明:
@@ -1873,7 +2115,14 @@ Film节点的升级版, 在之前基础上增加了fastgrain方法，生成噪�
 ![image](image/gaussian_blur_example.jpg)    
 
 节点选项说明:
-* blur: 模糊大小。
+* blur: 模糊大小。整数，范围 1-999。
+
+### <a id="table1">GaussianBlur</a>
+高斯模糊。参数精度改为浮点数，精度为0.01
+
+节点选项说明:
+![image](image/gaussian_blur_v2_node.jpg)    
+* blur: 模糊大小。浮点数，范围 0-1000。
 
 ### <a id="table1">AddGrain</a>
 给图片增加噪声。

@@ -1,5 +1,6 @@
 from .imagefunc import AnyType, log, extract_all_numbers_from_str
 
+
 any = AnyType("*")
 
 class SeedNode:
@@ -8,7 +9,7 @@ class SeedNode:
     @classmethod
     def INPUT_TYPES(self):
         return {"required": {
-                "seed":("INT", {"default": 0, "min": 0, "max": 99999999999999999999, "step": 1}),
+                "seed":("INT", {"default": 0, "min": 0, "max": 1e18, "step": 1}),
             },}
 
     RETURN_TYPES = ("INT",)
@@ -143,7 +144,7 @@ class NumberCalculator:
         pass
     @classmethod
     def INPUT_TYPES(self):
-        operator_list = ["+", "-", "*", "/", "**", "//", "%" ]
+        operator_list = ["+", "-", "*", "/", "**", "//", "%", "nth_root", "min", "max"]
         return {"required": {
                 "a": (any, {}),
                 "b": (any, {}),
@@ -167,6 +168,12 @@ class NumberCalculator:
             ret_value = a ** b
         if operator == "%":
             ret_value = a % b
+        if operator == "nth_root":
+            ret_value = a ** (1/b)
+        if operator == "min":
+            ret_value = min(a, b)
+        if operator == "max":
+            ret_value = max(a, b)
         if operator == "/":
             if b != 0:
                 ret_value = a / b
@@ -185,7 +192,7 @@ class NumberCalculatorV2:
         pass
     @classmethod
     def INPUT_TYPES(self):
-        operator_list = ["+", "-", "*", "/", "**", "//", "%" , "nth_root"]
+        operator_list = ["+", "-", "*", "/", "**", "//", "%" , "nth_root", "min", "max"]
 
         return {
                     "required":
@@ -239,6 +246,10 @@ class NumberCalculatorV2:
             ret_value = a % b
         if operator == "nth_root":
             ret_value = a ** (1/b)
+        if operator == "min":
+            ret_value = min(a, b)
+        if operator == "max":
+            ret_value = max(a, b)
         if operator == "/":
             if b != 0:
                 ret_value = a / b
@@ -257,7 +268,7 @@ class StringCondition:
         pass
     @classmethod
     def INPUT_TYPES(self):
-        string_condition_list = ["include", "exclude",]
+        string_condition_list = ["include", "exclude", "equal"]
         return {"required": {
                 "text": ("STRING", {"multiline": False}),
                 "condition": (string_condition_list,),
@@ -275,6 +286,8 @@ class StringCondition:
             ret = sub_string in text
         if condition == "exclude":
             ret = sub_string not in text
+        if condition == "equal":
+            ret = text == sub_string
         return (ret, str(ret))
 
 
@@ -318,7 +331,7 @@ class IntegerNode:
     @classmethod
     def INPUT_TYPES(self):
         return {"required": {
-                "int_value":("INT", {"default": 0, "min": -99999999999999999999, "max": 99999999999999999999, "step": 1}),
+                "int_value":("INT", {"default": 0, "min": -1e18, "max": 1e18, "step": 1}),
             },}
 
     RETURN_TYPES = ("INT", "STRING",)
@@ -327,7 +340,7 @@ class IntegerNode:
     CATEGORY = '😺dzNodes/LayerUtility/Data'
 
     def integer_node(self, int_value):
-        return (int_value, str(int_value))
+        return (int(int_value), str(int_value))
 
 class FloatNode:
     def __init__(self):
@@ -335,7 +348,7 @@ class FloatNode:
     @classmethod
     def INPUT_TYPES(self):
         return {"required": {
-                "float_value":  ("FLOAT", {"default": 0, "min": -99999999999999999999, "max": 99999999999999999999, "step": 0.00001}),
+                "float_value":  ("FLOAT", {"default": 0, "min": -1e18, "max": 1e18, "step": 0.00001}),
             },}
 
     RETURN_TYPES = ("FLOAT", "STRING",)
@@ -376,7 +389,7 @@ class IfExecute:
         }
 
     RETURN_TYPES = (any,)
-    RETURN_NAMES = "?"
+    RETURN_NAMES = ("?",)
     FUNCTION = "if_execute"
     CATEGORY = '😺dzNodes/LayerUtility/Data'
 
@@ -403,7 +416,7 @@ class SwitchCaseNode:
         }
 
     RETURN_TYPES = (any,)
-    RETURN_NAMES = "?"
+    RETURN_NAMES = ("?",)
     FUNCTION = "switch_case"
     CATEGORY = '😺dzNodes/LayerUtility/Data'
 

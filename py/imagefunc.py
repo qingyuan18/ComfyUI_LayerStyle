@@ -22,6 +22,7 @@ import scipy.ndimage
 import cv2
 import random
 import time
+from pathlib import Path
 from tqdm import tqdm
 from functools import lru_cache
 from typing import Union, List
@@ -29,14 +30,10 @@ from PIL import Image, ImageFilter, ImageChops, ImageDraw, ImageOps, ImageEnhanc
 from skimage import img_as_float, img_as_ubyte
 import torchvision.transforms.functional as TF
 import torch.nn.functional as F
-import colorsys
-from typing import Union
+from transformers import AutoModel, AutoProcessor, StoppingCriteria, StoppingCriteriaList, AutoModelForCausalLM, AutoTokenizer
+from colorsys import rgb_to_hsv
 import folder_paths
-from .briarmbg import BriaRMBG
-from .filmgrainer import processing as processing_utils
-from .filmgrainer import filmgrainer as filmgrainer
-import wget
-
+import comfy.model_management
 from .blendmodes import *
 
 def log(message:str, message_type:str='info'):
@@ -94,6 +91,15 @@ def load_light_leak_images() -> list:
     file = os.path.join(folder_paths.models_dir, "layerstyle", "light_leak.pkl")
     return load_pickle(file)
 
+def check_and_download_model(model_path, repo_id):
+    model_path = os.path.join(folder_paths.models_dir, model_path)
+
+    if not os.path.exists(model_path):
+        print(f"Downloading {repo_id} model...")
+        from huggingface_hub import snapshot_download
+        snapshot_download(repo_id=repo_id, local_dir=model_path, ignore_patterns=["*.md", "*.txt", "onnx", ".git"])
+    return model_path
+
 '''Converter'''
 
 def cv22ski(cv2_image:np.ndarray) -> np.array:
@@ -141,12 +147,11 @@ def tensor2cv2(image:torch.Tensor) -> np.array:
     return cv2.cvtColor(cv2image, cv2.COLOR_RGB2BGR)
 
 def image2mask(image:Image) -> torch.Tensor:
-    _image = image.convert('RGBA')
-    alpha = _image.split() [0]
-    bg = Image.new("L", _image.size)
-    _image = Image.merge('RGBA', (bg, bg, bg, alpha))
-    ret_mask = torch.tensor([pil2tensor(_image)[0, :, :, 3].tolist()])
-    return ret_mask
+    if image.mode == 'L':
+        return torch.tensor([pil2tensor(image)[0, :, :].tolist()])
+    else:
+        image = image.convert('RGB').split()[0]
+        return torch.tensor([pil2tensor(image)[0, :, :].tolist()])
 
 def mask2image(mask:torch.Tensor)  -> Image:
     masks = tensor2np(mask)
@@ -368,12 +373,10 @@ def chop_image(background_image:Image, layer_image:Image, blend_mode:str, opacit
     return ret_image
 
 def chop_image_v2(background_image:Image, layer_image:Image, blend_mode:str, opacity:int) -> Image:
-    backdrop_prepped = np.asfarray(background_image.convert('RGBA'))
-    source_prepped = np.asfarray(layer_image.convert('RGBA'))
-    blended_np = BLEND_MODES[blend_mode](backdrop_prepped, source_prepped, opacity / 100)
 
-    # final_tensor = (torch.from_numpy(blended_np / 255)).unsqueeze(0)
-    # return tensor2pil(_tensor)
+    backdrop_prepped = np.asarray(background_image.convert('RGBA'), dtype=float)
+    source_prepped = np.asarray(layer_image.convert('RGBA'), dtype=float)
+    blended_np = BLEND_MODES[blend_mode](backdrop_prepped, source_prepped, opacity / 100)
 
     return Image.fromarray(np.uint8(blended_np)).convert('RGB')
 
@@ -505,12 +508,14 @@ def filmgrain_image(image:Image, scale:float, grain_power:float,
     grain_type_index = 3
 
     # Apply grain
-    grain_image = filmgrainer.process(image, scale=scale, src_gamma=src_gamma, grain_power=grain_power,
+    from .filmgrainer import filmgrainer as fg
+    grain_image = fg.process(image, scale=scale, src_gamma=src_gamma, grain_power=grain_power,
                                       shadows=shadows, highs=highs, grain_type=grain_type_index,
                                       grain_sat=grain_sat, gray_scale=gray_scale, sharpen=sharpen, seed=seed)
     return tensor2pil(torch.from_numpy(grain_image).unsqueeze(0))
 
 def __apply_radialblur(image, blur_strength, radial_mask, focus_spread, steps):
+    from .filmgrainer import processing as processing_utils
     needs_normalization = image.max() > 1
     if needs_normalization:
         image = image.astype(np.float32) / 255
@@ -546,6 +551,7 @@ def radialblur_image(image:Image, blur_strength:float, center_x:float, center_y:
     return tensor2pil(torch.from_numpy(blur_image).unsqueeze(0))
 
 def __apply_depthblur(image, depth_map, blur_strength, focal_depth, focus_spread, steps):
+    from .filmgrainer import processing as processing_utils
     # Normalize the input image if needed
     needs_normalization = image.max() > 1
     if needs_normalization:
@@ -739,6 +745,31 @@ def gradient(start_color_inhex:str, end_color_inhex:str, width:int, height:int, 
     ret_image = ret_image.resize((width, height))
     return ret_image
 
+def draw_rounded_rectangle(image:Image, radius:int, bboxes:list, scale_factor:int=2, color:str="white") -> Image:
+        """
+        绘制圆角矩形图像。
+        image:输入图片
+        radius: 半径，100为纯椭圆
+        bboxes: (x1,y1,x2,y2)列表
+        scale_factor: 放大倍数
+        :return: 绘制好的pillow图像
+        """
+        if scale_factor < 1 : scale_factor = 1
+
+        img = image.resize((image.width * scale_factor, image.height * scale_factor), Image.LANCZOS)
+        draw = ImageDraw.Draw(img)
+
+        for (x1, y1, x2, y2) in bboxes:
+            r = radius * min(x2-x1, y2-y1) * 0.005
+            x1, y1, x2, y2 = x1 * scale_factor, y1 * scale_factor, x2 * scale_factor, y2 * scale_factor
+            # 计算圆角矩形的四个角的圆弧
+            draw.rounded_rectangle([x1, y1, x2, y2], radius=r * scale_factor, fill=color)
+
+        img = img.filter(ImageFilter.SMOOTH_MORE)
+        img = img.resize((image.width, image.height), Image.LANCZOS)
+
+        return img
+
 def draw_rect(image:Image, x:int, y:int, width:int, height:int, line_color:str, line_width:int,
               box_color:str=None) -> Image:
     draw = ImageDraw.Draw(image)
@@ -909,7 +940,7 @@ def get_image_color_tone(image:Image, mask:Image=None) -> str:
         if mask is not None:
             if r + g + b < 2:  # 忽略黑色
                 continue
-        saturation = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)[1]
+        saturation = rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)[1]
         y = min(abs(r * 2104 + g * 4130 + b * 802 + 4096 + 131072) >> 13,235)
         y = (y - 16.0) / (235 - 16)
         score = (saturation+0.1)*count
@@ -949,25 +980,30 @@ def get_image_color_average(image:Image, mask:Image=None) -> str:
 def get_gray_average(image:Image, mask:Image=None) -> int:
     # image.mode = 'HSV', mask.mode = 'L'
     image = image.convert('HSV')
-    _, _, _v = image.convert('HSV').split()
+
     if mask is not None:
         if mask.mode != 'L':
             mask = mask.convert('L')
-    width, height = image.size
-    total_gray = 0
-    valid_pixels = 0
-    for y in range(height):
-        for x in range(width):
-            if mask is not None:
-                if mask.getpixel((x, y)) > 16:  #mask亮度低于16的忽略不计
-                    gray = _v.getpixel((x, y))
-                    total_gray += gray
-                    valid_pixels += 1
-            else:
-                gray = _v.getpixel((x, y))
-                total_gray += gray
-                valid_pixels += 1
-    average_gray = total_gray // valid_pixels
+    else:
+        mask = Image.new('L', size=image.size, color='white')
+    _, _, _v = image.convert('HSV').split()
+    _v = np.array(_v)
+    average_gray = _v[np.array(mask) > 16].mean()
+    # width, height = image.size
+    # total_gray = 0
+    # valid_pixels = 0
+    # for y in range(height):
+    #     for x in range(width):
+    #         if mask is not None:
+    #             if mask.getpixel((x, y)) > 16:  #mask亮度低于16的忽略不计
+    #                 gray = _v.getpixel((x, y))
+    #                 total_gray += gray
+    #                 valid_pixels += 1
+    #         else:
+    #             gray = _v.getpixel((x, y))
+    #             total_gray += gray
+    #             valid_pixels += 1
+    # average_gray = total_gray // valid_pixels
     return average_gray
 
 def calculate_shadow_highlight_level(gray:int) -> float:
@@ -1045,46 +1081,25 @@ def image_channel_merge(channels:tuple, mode = 'RGB' ) -> Image:
 
 def image_gray_offset(image:Image, offset:int) -> Image:
     image = image.convert('L')
-    width = image.width
-    height = image.height
-    ret_image = Image.new('L', size=(width, height), color='black')
-    for x in range(width):
-        for y in range(height):
-                pixel = image.getpixel((x, y))
-                _pixel = pixel + offset
-                if _pixel > 255:
-                    _pixel = 255
-                if _pixel < 0:
-                    _pixel = 0
-                ret_image.putpixel((x, y), _pixel)
+    image_array = np.array(image, dtype=np.int16)
+    image_array = np.clip(image_array + offset, 0, 255).astype(np.uint8)
+    ret_image = Image.fromarray(image_array, mode='L')
     return ret_image
 
 def image_gray_ratio(image:Image, ratio:float) -> Image:
     image = image.convert('L')
-    width = image.width
-    height = image.height
-    ret_image = Image.new('L', size=(width, height), color='black')
-    for x in range(width):
-        for y in range(height):
-                pixel = image.getpixel((x, y))
-                _pixel = int(pixel * ratio)
-                ret_image.putpixel((x, y), _pixel)
+    image_array = np.array(image, dtype=np.float32)
+    image_array = np.clip(image_array * ratio, 0, 255).astype(np.uint8)
+    ret_image = Image.fromarray(image_array, mode='L')
     return ret_image
 
 def image_hue_offset(image:Image, offset:int) -> Image:
     image = image.convert('L')
-    width = image.width
-    height = image.height
-    ret_image = Image.new('L', size=(width, height), color='black')
-    for x in range(width):
-        for y in range(height):
-                pixel = image.getpixel((x, y))
-                _pixel = pixel + offset
-                if _pixel > 255:
-                    _pixel -= 256
-                if _pixel < 0:
-                    _pixel += 256
-                ret_image.putpixel((x, y), _pixel)
+    image_array = np.array(image, dtype=np.int16)
+    image_array = (image_array + offset) % 256
+    image_array = image_array.astype(np.uint8)
+    ret_image = Image.fromarray(image_array, mode='L')
+
     return ret_image
 
 def gamma_trans(image:Image, gamma:float) -> Image:
@@ -1094,28 +1109,71 @@ def gamma_trans(image:Image, gamma:float) -> Image:
     _corrected = cv2.LUT(cv2_image,gamma_table)
     return cv22pil(_corrected)
 
-# def apply_lut(image:Image, lut_file:str, log:bool=False) -> Image:
-#     from colour.io.luts.iridas_cube import read_LUT_IridasCube, LUT3D, LUT3x1D
-#     lut: Union[LUT3x1D, LUT3D] = read_LUT_IridasCube(lut_file)
-#     lut.name = os.path.splitext(os.path.basename(lut_file))[0]  # use base filename instead of internal LUT name
-#
-#     im_array = np.asarray(image.convert('RGB'), dtype=np.float32) / 255
-#     is_non_default_domain = not np.array_equal(lut.domain, np.array([[0., 0., 0.], [1., 1., 1.]]))
-#     dom_scale = None
-#     if is_non_default_domain:
-#         dom_scale = lut.domain[1] - lut.domain[0]
-#         im_array = im_array * dom_scale + lut.domain[0]
-#     if log:
-#         im_array = im_array ** (1 / 2.2)
-#     im_array = lut.apply(im_array)
-#     if log:
-#         im_array = im_array ** (2.2)
-#     if is_non_default_domain:
-#         im_array = (im_array - lut.domain[0]) / dom_scale
-#     im_array = im_array * 255
-#     ret_image = Image.fromarray(np.uint8(im_array))
-#
-#     return ret_image
+
+def read_LUT_IridasCube_encode_utf8(path: str):
+    from colour.utilities import as_float_array, as_int_scalar
+    from colour.io.luts.lut import LUT3x1D, LUT3D
+    title = re.sub("_|-|\\.", " ", os.path.splitext(os.path.basename(path))[0])
+    domain_min, domain_max = np.array([0, 0, 0]), np.array([1, 1, 1])
+    dimensions: int = 3
+    size: int = 2
+    data = []
+    comments = []
+
+    with open(path, encoding='utf-8') as cube_file:
+        lines = cube_file.readlines()
+        for line in lines:
+
+            line = line.strip()  # noqa: PLW2901
+
+            if len(line) == 0:
+                continue
+
+            if line.startswith("#"):
+                comments.append(line[1:].strip())
+                continue
+
+            tokens = line.split()
+            if tokens[0] == "TITLE":
+                title = " ".join(tokens[1:])[1:-1]
+            elif tokens[0] == "DOMAIN_MIN":
+                domain_min = as_float_array(tokens[1:])
+            elif tokens[0] == "DOMAIN_MAX":
+                domain_max = as_float_array(tokens[1:])
+            elif tokens[0] == "LUT_1D_SIZE":
+                dimensions = 2
+                size = as_int_scalar(tokens[1])
+            elif tokens[0] == "LUT_3D_SIZE":
+                dimensions = 3
+                size = as_int_scalar(tokens[1])
+            else:
+                data.append(tokens)
+
+    table = as_float_array(data)
+
+    LUT: LUT3x1D | LUT3D
+    if dimensions == 2:
+        LUT = LUT3x1D(
+            table,
+            title,
+            np.vstack([domain_min, domain_max]),
+            comments=comments,
+        )
+    elif dimensions == 3:
+        # The lines of table data shall be in ascending index order,
+        # with the first component index (Red) changing most rapidly,
+        # and the last component index (Blue) changing least rapidly.
+        table = table.reshape([size, size, size, 3], order="F")
+
+        LUT = LUT3D(
+            table,
+            title,
+            np.vstack([domain_min, domain_max]),
+            comments=comments,
+        )
+
+    return LUT
+
 
 def apply_lut(image:Image, lut_file:str, colorspace:str, strength:int, clip_values:bool=True) -> Image:
     """
@@ -1131,9 +1189,9 @@ def apply_lut(image:Image, lut_file:str, colorspace:str, strength:int, clip_valu
     if colorspace == "log":
         log_colorspace = True
 
-    from colour.io.luts.iridas_cube import read_LUT_IridasCube
+    # from colour.io.luts.iridas_cube import read_LUT_IridasCube
 
-    lut = read_LUT_IridasCube(lut_file)
+    lut = read_LUT_IridasCube_encode_utf8(lut_file)
     lut.name = lut_file
 
     if clip_values:
@@ -1203,8 +1261,8 @@ def image_beauty(image:Image, level:int=50) -> Image:
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     factor = (level / 50.0)**2
     d = int((image.width + image.height) / 256 * factor)
-    sigmaColor = int((image.width + image.height) / 256 * factor)
-    sigmaSpace = int((image.width + image.height) / 160 * factor)
+    sigmaColor = max(1, float((image.width + image.height) / 256 * factor))
+    sigmaSpace = max(1, float((image.width + image.height) / 160 * factor))
     img_bit = cv2.bilateralFilter(src=img, d=d, sigmaColor=sigmaColor, sigmaSpace=sigmaSpace)
     ret_image = cv2.cvtColor(img_bit, cv2.COLOR_BGR2RGB)
     return cv22pil(ret_image)
@@ -1225,58 +1283,6 @@ def pixel_spread(image:Image, mask:Image) -> Image:
 
     return tensor2pil(torch.from_numpy(fg.astype(np.float32)))
 
-
-def generate_text_image(text:str, font_path:str, font_size:int, text_color:str="#FFFFFF",
-                        vertical:bool=True, stroke_width:int=1, stroke_color:str="#000000",
-                         spacing:int=0, leading:int=0) -> tuple:
-
-    lines = text.split("\n")
-    if vertical:
-        layout = "vertical"
-    else:
-        layout = "horizontal"
-    char_coordinates = []
-    if layout == "vertical":
-        x = 0
-        y = 0
-        for i in range(len(lines)):
-            line = lines[i]
-            for char in line:
-                char_coordinates.append((x, y))
-                y += font_size + spacing
-            x += font_size + leading
-            y = 0
-    else:
-        x = 0
-        y = 0
-        for line in lines:
-            for char in line:
-                char_coordinates.append((x, y))
-                x += font_size + spacing
-            y += font_size + leading
-            x = 0
-    if layout == "vertical":
-        width = (len(lines) * (font_size + spacing)) - spacing
-        height = ((len(max(lines, key=len)) + 1) * (font_size + spacing)) + spacing
-    else:
-        width = (len(max(lines, key=len)) * (font_size + spacing)) - spacing
-        height = ((len(lines) - 1) * (font_size + spacing)) + font_size
-
-    image = Image.new('RGBA', size=(width, height), color=stroke_color)
-    draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype(font_path, font_size)
-    index = 0
-    for i, line in enumerate(lines):
-        for j, char in enumerate(line):
-            x, y = char_coordinates[index]
-            if stroke_width > 0:
-                draw.text((x - stroke_width, y), char, font=font, fill=stroke_color)
-                draw.text((x + stroke_width, y), char, font=font, fill=stroke_color)
-                draw.text((x, y - stroke_width), char, font=font, fill=stroke_color)
-                draw.text((x, y + stroke_width), char, font=font, fill=stroke_color)
-            draw.text((x, y), char, font=font, fill=text_color)
-            index += 1
-    return (image.convert('RGB'), image.split()[3])
 
 def watermark_image_size(image:Image) -> int:
     size = int(math.sqrt(image.width * image.height * 0.015625) * 0.9)
@@ -1299,7 +1305,7 @@ def add_invisibal_watermark(image:Image, watermark_image:Image) -> Image:
         os.makedirs(wm_dir)
         os.makedirs(result_dir)
     except Exception as e:
-        print(e)
+        # print(e)
         log(f"Error: {NODE_NAME} skipped, because unable to create temporary folder.", message_type='error')
         return (image,)
 
@@ -1313,7 +1319,7 @@ def add_invisibal_watermark(image:Image, watermark_image:Image) -> Image:
         image.save(os.path.join(image_dir, image_file_name))
         watermark_image.save(os.path.join(wm_dir, wm_file_name))
     except IOError as e:
-        print(e)
+        # print(e)
         log(f"Error: {NODE_NAME} skipped, because unable to create temporary file.", message_type='error')
         return (image,)
 
@@ -1337,7 +1343,7 @@ def decode_watermark(image:Image, watermark_image_size:int=94) -> Image:
         os.makedirs(image_dir)
         os.makedirs(result_dir)
     except Exception as e:
-        print(e)
+        # print(e)
         log(f"Error: {NODE_NAME} skipped, because unable to create temporary folder.", message_type='error')
         return (image,)
 
@@ -1347,7 +1353,7 @@ def decode_watermark(image:Image, watermark_image_size:int=94) -> Image:
     try:
         image.save(os.path.join(image_dir, image_file_name))
     except IOError as e:
-        print(e)
+        # print(e)
         log(f"Error: {NODE_NAME} skipped, because unable to create temporary file.", message_type='error')
         return (image,)
 
@@ -1365,6 +1371,58 @@ def decode_watermark(image:Image, watermark_image_size:int=94) -> Image:
         ret_image = Image.new("RGB", (64, 64), color="black")
     ret_image = normalize_gray(ret_image)
     return ret_image
+
+# def generate_text_image(text:str, font_path:str, font_size:int, text_color:str="#FFFFFF",
+#                         vertical:bool=True, stroke_width:int=1, stroke_color:str="#000000",
+#                          spacing:int=0, leading:int=0) -> tuple:
+#
+#     lines = text.split("\n")
+#     if vertical:
+#         layout = "vertical"
+#     else:
+#         layout = "horizontal"
+#     char_coordinates = []
+#     if layout == "vertical":
+#         x = 0
+#         y = 0
+#         for i in range(len(lines)):
+#             line = lines[i]
+#             for char in line:
+#                 char_coordinates.append((x, y))
+#                 y += font_size + spacing
+#             x += font_size + leading
+#             y = 0
+#     else:
+#         x = 0
+#         y = 0
+#         for line in lines:
+#             for char in line:
+#                 char_coordinates.append((x, y))
+#                 x += font_size + spacing
+#             y += font_size + leading
+#             x = 0
+#     if layout == "vertical":
+#         width = (len(lines) * (font_size + spacing)) - spacing
+#         height = ((len(max(lines, key=len)) + 1) * (font_size + spacing)) + spacing
+#     else:
+#         width = (len(max(lines, key=len)) * (font_size + spacing)) - spacing
+#         height = ((len(lines) - 1) * (font_size + spacing)) + font_size
+#
+#     image = Image.new('RGBA', size=(width, height), color=stroke_color)
+#     draw = ImageDraw.Draw(image)
+#     font = ImageFont.truetype(font_path, font_size)
+#     index = 0
+#     for i, line in enumerate(lines):
+#         for j, char in enumerate(line):
+#             x, y = char_coordinates[index]
+#             if stroke_width > 0:
+#                 draw.text((x - stroke_width, y), char, font=font, fill=stroke_color)
+#                 draw.text((x + stroke_width, y), char, font=font, fill=stroke_color)
+#                 draw.text((x, y - stroke_width), char, font=font, fill=stroke_color)
+#                 draw.text((x, y + stroke_width), char, font=font, fill=stroke_color)
+#             draw.text((x, y), char, font=font, fill=text_color)
+#             index += 1
+#     return (image.convert('RGB'), image.split()[3])
 
 def generate_text_image(width:int, height:int, text:str, font_file:str, text_scale:float=1, font_color:str="#FFFFFF",) -> Image:
     image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -1415,6 +1473,7 @@ def create_mask_from_color_tensor(image:Image, color:str, tolerance:int=0) -> Im
 
 @lru_cache(maxsize=1, typed=False)
 def load_RMBG_model():
+    from .briarmbg import BriaRMBG
     current_directory = os.path.dirname(os.path.abspath(__file__))
     device = "cuda" if torch.cuda.is_available() else "cpu"
     net = BriaRMBG()
@@ -1427,7 +1486,7 @@ def load_RMBG_model():
         model_path = os.path.join(folder_paths.models_dir, "rmbg", "RMBG-1.4", "model.pth")
     if not os.path.exists(model_path):
         model_path = os.path.join(os.path.dirname(current_directory), "RMBG-1.4", "model.pth")
-    net.load_state_dict(torch.load(model_path, map_location=device))
+    net.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     net.to(device)
     net.eval()
     return net
@@ -1490,9 +1549,12 @@ class VITMatteModel:
         self.processor = processor
 
 def load_VITMatte_model(model_name:str, local_files_only:bool=False) -> object:
+    model_name = "vitmatte"
+    model_repo = "hustvl/vitmatte-small-composition-1k"
+    model_path  = check_and_download_model(model_name, model_repo)
     from transformers import VitMatteImageProcessor, VitMatteForImageMatting
-    model = VitMatteForImageMatting.from_pretrained(model_name, local_files_only=local_files_only)
-    processor = VitMatteImageProcessor.from_pretrained(model_name, local_files_only=local_files_only)
+    model = VitMatteForImageMatting.from_pretrained(model_path, local_files_only=local_files_only)
+    processor = VitMatteImageProcessor.from_pretrained(model_path, local_files_only=local_files_only)
     vitmatte = VITMatteModel(model, processor)
     return vitmatte
 
@@ -1511,7 +1573,7 @@ def generate_VITMatte(image:Image, trimap:Image, local_files_only:bool=False, de
     if width * height > max_megapixels:
         image = image.resize((target_width, target_height), Image.BILINEAR)
         trimap = trimap.resize((target_width, target_height), Image.BILINEAR)
-        log(f"vitmatte image size {width}x{height} too large, resize to {target_width}x{target_height} for processing.")
+        # log(f"vitmatte image size {width}x{height} too large, resize to {target_width}x{target_height} for processing.")
     model_name = "hustvl/vitmatte-small-composition-1k"
     if device=="cpu":
         device = torch.device('cpu')
@@ -1523,7 +1585,7 @@ def generate_VITMatte(image:Image, trimap:Image, local_files_only:bool=False, de
             device = torch.device('cpu')
     vit_matte_model = load_VITMatte_model(model_name=model_name, local_files_only=local_files_only)
     vit_matte_model.model.to(device)
-    log(f"vitmatte processing, image size = {image.width}x{image.height}, device = {device}.")
+    # log(f"vitmatte processing, image size = {image.width}x{image.height}, device = {device}.")
     inputs = vit_matte_model.processor(images=image, trimaps=trimap, return_tensors="pt")
     with torch.no_grad():
         inputs = {k: v.to(device) for k, v in inputs.items()}
@@ -1571,9 +1633,10 @@ def get_a_person_mask_generator_model_path() -> str:
         model_file_path = os.path.join(folder_paths.models_dir, model_folder_name, model_name)
 
     if not os.path.exists(model_file_path):
+        import wget
         model_url = f'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_multiclass_256x256/float32/latest/{model_name}'
-        print(f"Downloading '{model_name}' model")
-        os.makedirs(model_file_path, exist_ok=True)
+        log(f"Downloading '{model_name}' model")
+        os.makedirs(os.path.dirname(model_file_path), exist_ok=True)
         wget.download(model_url, model_file_path)
     return model_file_path
 
@@ -1652,10 +1715,13 @@ def mask_area(image:Image) -> tuple:
     gray = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2GRAY)
     _, thresh = cv2.threshold(gray, 127, 255, 0)
     locs = np.where(thresh == 255)
-    x1 = np.min(locs[1]) if len(locs[1]) > 0 else 0
-    x2 = np.max(locs[1]) if len(locs[1]) > 0 else image.width
-    y1 = np.min(locs[0]) if len(locs[0]) > 0 else 0
-    y2 = np.max(locs[0]) if len(locs[0]) > 0 else image.height
+    try:
+        x1 = np.min(locs[1])
+        x2 = np.max(locs[1])
+        y1 = np.min(locs[0])
+        y2 = np.max(locs[0])
+    except ValueError:
+        x1, y1, x2, y2 = -1, -1, 0, 0
     x1, y1, x2, y2 = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
     return (x1, y1, x2 - x1, y2 - y1)
 
@@ -1740,7 +1806,6 @@ def mask_white_area(mask:Image, white_point:int) -> float:
 
 '''Color Functions'''
 
-
 def color_balance(image:Image, shadows:list, midtones:list, highlights:list,
                   shadow_center:float=0.15, midtone_center:float=0.5, highlight_center:float=0.8,
                   shadow_max:float=0.1, midtone_max:float=0.3, highlight_max:float=0.2,
@@ -1783,7 +1848,6 @@ def color_balance(image:Image, shadows:list, midtones:list, highlights:list,
 
     return tensor2pil(img_copy)
 
-
 def RGB_to_Hex(RGB:tuple) -> str:
     color = '#'
     for i in RGB:
@@ -1795,6 +1859,8 @@ def Hex_to_RGB(inhex:str) -> tuple:
     if not inhex.startswith('#'):
         raise ValueError(f'Invalid Hex Code in {inhex}')
     else:
+        if len(inhex) == 4:
+            inhex = "#" + "".join([char * 2 for char in inhex[1:]])
         rval = inhex[1:3]
         gval = inhex[3:5]
         bval = inhex[5:]
@@ -1802,20 +1868,21 @@ def Hex_to_RGB(inhex:str) -> tuple:
     return tuple(rgb)
 
 def RGB_to_HSV(RGB:tuple) -> list:
-    HSV = colorsys.rgb_to_hsv(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0)
+    HSV = rgb_to_hsv(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0)
     return [int(x * 360) for x in HSV]
 
 def Hex_to_HSV_255level(inhex:str) -> list:
     if not inhex.startswith('#'):
         raise ValueError(f'Invalid Hex Code in {inhex}')
     else:
+        if len(inhex) == 4:
+            inhex = "#" + "".join([char * 2 for char in inhex[1:]])
         rval = inhex[1:3]
         gval = inhex[3:5]
         bval = inhex[5:]
         RGB = (int(rval, 16), int(gval, 16), int(bval, 16))
-        HSV = colorsys.rgb_to_hsv(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0)
+        HSV = rgb_to_hsv(RGB[0] / 255.0, RGB[1] / 255.0, RGB[2] / 255.0)
     return [int(x * 255) for x in HSV]
-
 
 def HSV_255level_to_Hex(HSV: list) -> str:
     if len(HSV) != 3 or any((not isinstance(v, int) or v < 0 or v > 255) for v in HSV):
@@ -1831,7 +1898,19 @@ def HSV_255level_to_Hex(HSV: list) -> str:
 
     return '#' + hex_r + hex_g + hex_b
 
+# 返回补色色值
+def complementary_color(color: str) -> str:
+    color = Hex_to_RGB(color)
+    return RGB_to_Hex((255 - color[0], 255 - color[1], 255 - color[2]))
+
+# 返回颜色对应灰度值
+def rgb2gray(color:str)->int:
+    (r, g, b) = Hex_to_RGB(color)
+    return int((r * 299 + g * 587 + b * 114) / 1000)
+
 '''Value Functions'''
+def is_valid_mask(tensor:torch.Tensor) -> bool:
+    return not bool(torch.all(tensor == 0).item())
 
 def step_value(start_value, end_value, total_step, step) -> float:  # 按当前步数在总步数中的位置返回比例值
     factor = step / total_step
@@ -1932,7 +2011,7 @@ def check_image_file(file_name:str, interval:int) -> object:
                 image.close()
                 return ret_image
             except Exception as e:
-                print(e)
+                log(e)
                 return None
             break
         time.sleep(interval / 1000)
@@ -1943,6 +2022,14 @@ def is_contain_chinese(check_str:str) -> bool:
         if u'\u4e00' <= ch <= u'\u9fff':
             return True
     return False
+
+# 生成随机颜色
+def generate_random_color():
+    """
+    Generate a random color in hexadecimal format.
+    """
+    # random.seed(int(time.time()))
+    return "#{:06x}".format(random.randint(0x101010, 0xFFFFFF))
 
 # 提取字符串中的int数为列表
 def extract_numbers(string):
@@ -1970,6 +2057,77 @@ def extract_all_numbers_from_str(string, checkint:bool=False):
 
     return number_list
 
+
+
+# 提取字符串中用"," ";" " "分开的字符串, 返回为列表
+def extract_substr_from_str(string) -> list:
+    return re.split(r'[,\s;，；]+', string)
+
+# lcs匹配算法，计算最长公共子序列 (LCS)：子字符串顺序：以相同顺序出现，权重更高。额外字符惩罚：多余字符会降低相似度。
+def lcs_with_order(s1, s2):
+    """Calculate the length of the longest common subsequence (LCS) with the same order."""
+    m, n = len(s1), len(s2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if s1[i - 1] == s2[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1
+            else:
+                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
+
+    return dp[m][n]
+
+# 使用正则表达式将字符串拆分为单词（token），对比的同时忽略大小写和非字母数字字符。
+def tokenize_string(s):
+    """Tokenize a string by splitting on non-alphanumeric characters and normalizing case."""
+    return re.findall(r'\b\w+\b', s.lower())
+
+# 在列表中找到字符串的最佳匹配
+def find_best_match_by_similarity(target, candidates):
+    """
+    Find the best matching string based on substring order, extra character penalties, and tokenization.
+
+    Parameters:
+        target (str): The target string.
+        candidates (list of str): List of candidate strings.
+
+    Returns:
+        str: The best matching string.
+    """
+    target_tokens = tokenize_string(target)
+    best_match = None
+    highest_score = float('-inf')
+
+    for candidate in candidates:
+        candidate_tokens = tokenize_string(candidate)
+
+        # Calculate LCS on tokens
+        target_str = ''.join(target_tokens)
+        candidate_str = ''.join(candidate_tokens)
+        lcs = lcs_with_order(target_str, candidate_str)
+
+        # Calculate similarity score
+        match_ratio = lcs / len(target_str)  # Ratio of matched characters
+        extra_char_penalty = len(candidate_str) - lcs  # Penalty for extra characters
+        unmatched_tokens_penalty = len(set(candidate_tokens) - set(target_tokens))  # Penalty for unmatched tokens
+        score = match_ratio - 0.1 * extra_char_penalty - 0.2 * unmatched_tokens_penalty  # Weighted score
+
+        if score > highest_score:
+            highest_score = score
+            best_match = candidate
+
+    return best_match
+
+
+def clear_memory():
+    import gc
+    # Cleanup
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        torch.cuda.ipc_collect()
+
 def tensor_info(tensor:object) -> str:
     value = ''
     if isinstance(tensor, torch.Tensor):
@@ -1984,6 +2142,97 @@ def tensor_info(tensor:object) -> str:
         value = f"tensor_info: Not tensor, type is {type(tensor)}"
     return value
 
+# 去除空行
+def remove_empty_lines(text):
+    lines = text.split('\n')
+    non_empty_lines = [line for line in lines if line.strip() != '']
+    return '\n'.join(non_empty_lines)
+
+# 去除重复的句子
+def remove_duplicate_string(text:str) -> str:
+    sentences = re.split(r'(?<=[:;,.!?])\s+', text)
+    unique_sentences = []
+    seen = set()
+    for sentence in sentences:
+        if sentence not in seen:
+            seen.add(sentence)
+            unique_sentences.append(sentence)
+    return ' '.join(unique_sentences)
+
+files_for_uform_gen2_qwen = Path(os.path.join(folder_paths.models_dir, "LLavacheckpoints", "files_for_uform_gen2_qwen"))
+class StopOnTokens(StoppingCriteria):
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+        stop_ids = [151645]  # Define stop tokens as per your model's specifics
+        for stop_id in stop_ids:
+            if input_ids[0][-1] == stop_id:
+                return True
+        return False
+
+class UformGen2QwenChat:
+
+    def __init__(self):
+        from huggingface_hub import snapshot_download
+        # self.model_path = snapshot_download("unum-cloud/uform-gen2-qwen-500m",
+        #                                     local_dir=files_for_uform_gen2_qwen,
+        #                                     force_download=False,  # Set to True if you always want to download, regardless of local copy
+        #                                     local_files_only=False,  # Set to False to allow downloading if not available locally
+        #                                     local_dir_use_symlinks="auto") # or set to True/False based on your symlink preference
+        self.model_path = files_for_uform_gen2_qwen
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = AutoModel.from_pretrained(self.model_path, trust_remote_code=True).to(self.device)
+        self.processor = AutoProcessor.from_pretrained(self.model_path, trust_remote_code=True)
+
+    def chat_response(self, message, history, image_path):
+        stop = StopOnTokens()
+        messages = [{"role": "system", "content": "You are a helpful Assistant."}]
+
+        for user_msg, assistant_msg in history:
+            messages.append({"role": "user", "content": user_msg})
+            messages.append({"role": "assistant", "content": assistant_msg})
+
+        if len(messages) == 1:
+            message = f" <image>{message}"
+
+        messages.append({"role": "user", "content": message})
+
+        model_inputs = self.processor.tokenizer.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            return_tensors="pt"
+        )
+
+        image = Image.open(image_path)  # Load image using PIL
+        image_tensor = (
+            self.processor.feature_extractor(image)
+            .unsqueeze(0)
+        )
+
+        attention_mask = torch.ones(
+            1, model_inputs.shape[1] + self.processor.num_image_latents - 1
+        )
+
+        model_inputs = {
+            "input_ids": model_inputs,
+            "images": image_tensor,
+            "attention_mask": attention_mask
+        }
+
+        model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
+
+        with torch.inference_mode():
+            output = self.model.generate(
+                **model_inputs,
+                max_new_tokens=512,
+                do_sample=True,
+                temperature=0.3,
+                repetition_penalty=1.2,
+                stopping_criteria=StoppingCriteriaList([stop])
+            )
+
+        response_text = self.processor.tokenizer.decode(output[0], skip_special_tokens=True)
+        response_text = remove_duplicate_string(response_text)
+        return response_text
+
 '''CLASS'''
 
 class AnyType(str):
@@ -1992,6 +2241,215 @@ class AnyType(str):
     return True
   def __ne__(self, __value: object) -> bool:
     return False
+
+
+
+'''Load File'''
+
+def download_hg_model(model_id:str,exDir:str='') -> str:
+    # 下载本地
+    model_checkpoint = os.path.join(folder_paths.models_dir, exDir, os.path.basename(model_id))
+    if not os.path.exists(model_checkpoint):
+        from huggingface_hub import snapshot_download
+        snapshot_download(repo_id=model_id, local_dir=model_checkpoint, local_dir_use_symlinks=False)
+    return model_checkpoint
+
+
+def get_files(model_path: str, file_ext_list:list) -> dict:
+    file_list = []
+    for ext in file_ext_list:
+        file_list.extend(glob.glob(os.path.join(model_path, '*' + ext)))
+    files_dict = {}
+    for i in range(len(file_list)):
+        _, filename = os.path.split(file_list[i])
+        files_dict[filename] = file_list[i]
+    return files_dict
+
+# def load_inference_prompt() -> str:
+#     inference_prompt_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), "resource",
+#                                          "inference.prompt")
+#     ret_value = ''
+#     try:
+#         with open(inference_prompt_file, 'r') as f:
+#             ret_value = f.readlines()
+#     except Exception as e:
+#         log(f'Warning: {inference_prompt_file} ' + repr(e) + f", check it to be correct. ", message_type='warning')
+#     return  ''.join(ret_value)
+
+def load_custom_size() -> list:
+    custom_size_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), "custom_size.ini")
+    ret_value = ['1024 x 1024',
+                '768 x 512',
+                '512 x 768',
+                '1280 x 720',
+                '720 x 1280',
+                '1344 x 768',
+                '768 x 1344',
+                '1536 x 640',
+                '640 x 1536'
+                 ]
+    try:
+        with open(custom_size_file, 'r') as f:
+            ini = f.readlines()
+            for line in ini:
+                if not line.startswith(f'#'):
+                    ret_value.append(line.strip())
+    except Exception as e:
+        pass
+        # log(f'Warning: {custom_size_file} not found' + f", use default size. ")
+    return ret_value
+
+def get_api_key(api_name:str) -> str:
+    api_key_ini_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), "api_key.ini")
+    ret_value = ''
+    try:
+        with open(api_key_ini_file, 'r') as f:
+            ini = f.readlines()
+            for line in ini:
+                if line.startswith(f'{api_name}='):
+                    ret_value = line[line.find('=') + 1:].rstrip().lstrip()
+                    break
+    except Exception as e:
+        log(f'Warning: {api_key_ini_file} ' + repr(e) + f", check it to be correct. ", message_type='warning')
+    remove_char = ['"', "'", '“', '”', '‘', '’']
+    for i in remove_char:
+        if i in ret_value:
+            ret_value = ret_value.replace(i, '')
+    if len(ret_value) < 4:
+        log(f'Warning: Invalid API-key, Check the key in {api_key_ini_file}.', message_type='warning')
+    return ret_value
+
+# 判断文件名后缀是否包括在列表中(忽略大小写)
+def file_is_extension(filename:str, ext_list:tuple) -> bool:
+    # 获取文件的真实后缀（包括点）
+    true_ext = os.path.splitext(filename)[1]
+    if true_ext.lower() in ext_list:
+        return True
+    return False
+
+# 遍历目录下包括子目录指定后缀文件，返回字典
+def collect_files(root_dir:str, suffixes:tuple, default_dir:str=""):
+    result = {}
+    for dirpath, _, filenames in os.walk(root_dir):
+        for file in filenames:
+            if file_is_extension(file, suffixes):
+                # 获取文件的完整路径作为 value
+                full_path = os.path.join(dirpath, file)
+                # 如果是default_dir 则去掉路径，使用文件名作为 key
+                if dirpath == default_dir:
+                    relative_path = os.path.relpath(full_path, root_dir)
+                    result.update({relative_path: full_path})
+                else:
+                    result.update({full_path: full_path})
+    return result
+
+
+def get_resource_dir() -> list:
+    default_lut_dir = []
+    default_lut_dir.append(os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), 'lut'))
+    default_font_dir = []
+    default_font_dir.append(os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), 'font'))
+    resource_dir_ini_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))),
+                                         "resource_dir.ini")
+    try:
+        with open(resource_dir_ini_file, 'r') as f:
+            ini = f.readlines()
+            for line in ini:
+                if line.startswith('LUT_dir='):
+                    _ldir = line[line.find('=') + 1:].rstrip().lstrip()
+                    for dir in extract_substr_from_str(_ldir) :
+                        if os.path.exists(dir):
+                            default_lut_dir.append(dir)
+                elif line.startswith('FONT_dir='):
+                    _fdir = line[line.find('=') + 1:].rstrip().lstrip()
+                    for dir in extract_substr_from_str(_fdir):
+                        if os.path.exists(dir):
+                            default_font_dir.append(dir)
+    except Exception as e:
+        pass
+        # log(f'Warning: {resource_dir_ini_file} not found' + f", default directory to be used. ")
+
+
+    LUT_DICT = {}
+    for dir in default_lut_dir:
+        LUT_DICT.update(collect_files(root_dir=dir, suffixes= ('.cube'), default_dir=default_lut_dir[0] )) # 后缀要小写
+    LUT_LIST = list(LUT_DICT.keys())
+
+    FONT_DICT = {}
+    for dir in default_font_dir:
+        FONT_DICT.update(collect_files(root_dir=dir, suffixes=('.ttf', '.otf'), default_dir=default_font_dir[0])) # 后缀要小写
+    FONT_LIST = list(FONT_DICT.keys())
+
+    return (LUT_DICT, FONT_DICT)
+
+# 规范bbox，保证x1 < x2, y1 < y2, 并返回int
+def standardize_bbox(bboxes:list) -> list:
+    ret_bboxes = []
+    for bbox in bboxes:
+        x1 = int(min(bbox[0], bbox[2]))
+        y1 = int(min(bbox[1], bbox[3]))
+        x2 = int(max(bbox[0], bbox[2]))
+        y2 = int(max(bbox[1], bbox[3]))
+        ret_bboxes.append([x1, y1, x2, y2])
+    return ret_bboxes
+
+def draw_bounding_boxes(image: Image, bboxes: list, color: str = "#FF0000", line_width: int = 5) -> Image:
+    """
+    Draw bounding boxes on the image using the coordinates provided in the bboxes dictionary.
+    """
+
+    (_, FONT_DICT) = get_resource_dir()
+
+    font_size = 25
+    font = ImageFont.truetype(list(FONT_DICT.items())[0][1], font_size)
+
+    if len(bboxes) > 0:
+        draw = ImageDraw.Draw(image)
+        width, height = image.size
+        if line_width < 0:  # auto line width
+            line_width = (image.width + image.height) // 1000
+
+        for index, box in enumerate(bboxes):
+            random_color = generate_random_color()
+            if color != "random":
+                random_color = color
+            xmin = min(box[0], box[2])
+            xmax = max(box[0], box[2])
+            ymin = min(box[1], box[3])
+            ymax = max(box[1], box[3])
+            draw.rectangle([xmin, ymin, xmax, ymax], outline=random_color, width=line_width)
+            draw.text((xmin, ymin - font_size*1.2), str(index), font=font, fill=random_color)
+
+    return image
+
+def draw_bbox(image: Image, bbox: tuple, color: str = "#FF0000", line_width: int = 5, title: str = "", font_size: int = 10) -> Image:
+    """
+    Draw bounding boxes on the image using the coordinates provided in the bboxes dictionary.
+    """
+
+    (_, FONT_DICT) = get_resource_dir()
+
+    font = ImageFont.truetype(list(FONT_DICT.items())[0][1], font_size)
+
+    draw = ImageDraw.Draw(image)
+    width, height = image.size
+    if line_width < 0:  # auto line width
+        line_width = (image.width + image.height) // 1000
+
+    random_color = generate_random_color()
+    if color != "random":
+        random_color = color
+    xmin = min(bbox[0], bbox[2])
+    xmax = max(bbox[0], bbox[2])
+    ymin = min(bbox[1], bbox[3])
+    ymax = max(bbox[1], bbox[3])
+    draw.rectangle([xmin, ymin, xmax, ymax], outline=random_color, width=line_width)
+    if title != "":
+        draw.text((xmin, ymin - font_size*1.2), title, font=font, fill=random_color)
+
+    return image
+
+
 
 '''Constant'''
 
@@ -2020,105 +2478,6 @@ chop_mode = [
 # Blend Mode from Virtuoso Pack https://github.com/chrisfreilich/virtuoso-nodes
 chop_mode_v2 = list(BLEND_MODES.keys())
 
-
-'''Load INI File'''
-
-default_lut_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), 'lut')
-default_font_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), 'font')
-resource_dir_ini_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), "resource_dir.ini")
-api_key_ini_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), "api_key.ini")
-custom_size_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), "custom_size.ini")
-
-# def load_inference_prompt() -> str:
-#     inference_prompt_file = os.path.join(os.path.dirname(os.path.dirname(os.path.normpath(__file__))), "resource",
-#                                          "inference.prompt")
-#     ret_value = ''
-#     try:
-#         with open(inference_prompt_file, 'r') as f:
-#             ret_value = f.readlines()
-#     except Exception as e:
-#         log(f'Warning: {inference_prompt_file} ' + repr(e) + f", check it to be correct. ", message_type='warning')
-#     return  ''.join(ret_value)
-
-def load_custom_size() -> list:
-    ret_value = ['1024 x 1024',
-                '768 x 512',
-                '512 x 768',
-                '1280 x 720',
-                '720 x 1280',
-                '1344 x 768',
-                '768 x 1344',
-                '1536 x 640',
-                '640 x 1536'
-                 ]
-    try:
-        with open(custom_size_file, 'r') as f:
-            ini = f.readlines()
-            for line in ini:
-                if not line.startswith(f'#'):
-                    ret_value.append(line.strip())
-    except Exception as e:
-        # log(f'Warning: {custom_size_file} ' + repr(e) + f", use default size. ")
-        log(f'Warning: {custom_size_file} not found' + f", use default size. ")
-    return ret_value
-
-def get_api_key(api_name:str) -> str:
-    ret_value = ''
-    try:
-        with open(api_key_ini_file, 'r') as f:
-            ini = f.readlines()
-            for line in ini:
-                if line.startswith(f'{api_name}='):
-                    ret_value = line[line.find('=') + 1:].rstrip().lstrip()
-                    break
-    except Exception as e:
-        log(f'Warning: {api_key_ini_file} ' + repr(e) + f", check it to be correct. ", message_type='warning')
-    remove_char = ['"', "'", '“', '”', '‘', '’']
-    for i in remove_char:
-        if i in ret_value:
-            ret_value = ret_value.replace(i, '')
-    if len(ret_value) < 4:
-        log(f'Warning: Invalid API-key, Check the key in {api_key_ini_file}.', message_type='warning')
-
-    return ret_value
-
-try:
-    with open(resource_dir_ini_file, 'r') as f:
-        ini = f.readlines()
-        for line in ini:
-            if line.startswith('LUT_dir='):
-                _ldir = line[line.find('=') + 1:].rstrip().lstrip()
-                if os.path.exists(_ldir):
-                    default_lut_dir = _ldir
-                else:
-                    log(f'Invalid LUT directory, default to be used. check {resource_dir_ini_file}')
-            elif line.startswith('FONT_dir='):
-                _fdir = line[line.find('=') + 1:].rstrip().lstrip()
-                if os.path.exists(_fdir):
-                    default_font_dir = _fdir
-                else:
-                    log(f'Invalid FONT directory, default to be used. check {resource_dir_ini_file}')
-except Exception as e:
-    # log(f'Warning: {resource_dir_ini_file} ' + repr(e) + f", default directory to be used. ")
-    log(f'Warning: {resource_dir_ini_file} not found' + f", default directory to be used. ")
-
-__lut_file_list = glob.glob(default_lut_dir + '/*.cube')
-LUT_DICT = {}
-for i in range(len(__lut_file_list)):
-    _, __filename =  os.path.split(__lut_file_list[i])
-    LUT_DICT[__filename] = __lut_file_list[i]
-LUT_LIST = list(LUT_DICT.keys())
-log(f'Find {len(LUT_LIST)} LUTs in {default_lut_dir}')
-
-__font_file_list = glob.glob(default_font_dir + '/*.ttf')
-__font_file_list.extend(glob.glob(default_font_dir + '/*.otf'))
-FONT_DICT = {}
-for i in range(len(__font_file_list)):
-    _, __filename =  os.path.split(__font_file_list[i])
-    FONT_DICT[__filename] = __font_file_list[i]
-FONT_LIST = list(FONT_DICT.keys())
-log(f'Find {len(FONT_LIST)} Fonts in {default_font_dir}')
-
 gemini_generate_config = {
     "temperature": 0,
     "top_p": 1,
@@ -2144,3 +2503,51 @@ gemini_safety_settings = [
         "threshold": "BLOCK_NONE"
     }
 ]
+
+minicpm_llama3_v25_prompts = """
+        # MISSION
+        You are an imagine generator for a slide deck tool. You will be given the text or description of a slide and you'll generate a few image descriptions that will be fed to an AI image generator. It will need to have a particular format (seen below). You will also be given some examples below. Think metaphorically and symbolically. 
+
+        # FORMAT
+        The format should follow this general pattern:
+
+        <MAIN SUBJECT>, <DESCRIPTION OF MAIN SUBJECT>, <BACKGROUND OR CONTEXT, LOCATION, ETC>, <STYLE, GENRE, MOTIF, ETC>, <COLOR SCHEME>, <CAMERA DETAILS>
+
+        It's not strictly required, as you'll see below, you can pick and choose various aspects, but this is the general order of operations
+
+        # EXAMPLES
+
+        a Shakespeare stage play, yellow mist, atmospheric, set design by Michel Crête, Aerial acrobatics design by André Simard, hyperrealistic, 4K, Octane render, unreal engine
+
+        The Moon Knight dissolving into swirling sand, volumetric dust, cinematic lighting, close up portrait
+
+        ethereal Bohemian Waxwing bird, Bombycilla garrulus :: intricate details, ornate, detailed illustration, octane render :: Johanna Rupprecht style, William Morris style :: trending on artstation
+
+        steampunk cat, octane render, hyper realistic
+
+        Hyper detailed movie still that fuses the iconic tea party scene from Alice in Wonderland showing the hatter and an adult alice. a wooden table is filled with teacups and cannabis plants. The scene is surrounded by flying weed. Some playcards flying around in the air. Captured with a Hasselblad medium format camera
+
+        venice in a carnival picture 3, in the style of fantastical compositions, colorful, eye-catching compositions, symmetrical arrangements, navy and aquamarine, distinctive noses, gothic references, spiral group –style expressive
+
+        Beautiful and terrifying Egyptian mummy, flirting and vamping with the viewer, rotting and decaying climbing out of a sarcophagus lunging at the viewer, symmetrical full body Portrait photo, elegant, highly detailed, soft ambient lighting, rule of thirds, professional photo HD Photography, film, sony, portray, kodak Polaroid 3200dpi scan medium format film Portra 800, vibrantly colored portrait photo by Joel – Peter Witkin + Diane Arbus + Rhiannon + Mike Tang, fashion shoot
+
+        A grandmotherly Fate sits on a cozy cosmic throne knitting with mirrored threads of time, the solar system spins like clockwork behind her as she knits the futures of people together like an endless collage of destiny, maximilism, cinematic quality, sharp – focus, intricate details
+
+        A cloud with several airplanes flying around on top, in the style of detailed fantasy art, nightcore, quiet moments captured in paint, radiant clusters, i cant believe how beautiful this is, detailed character design, dark cyan and light crimson
+
+        An incredibly detailed close up macro beauty photo of an Asian model, hands holding a bouquet of pink roses, surrounded by scary crows from hell. Shot on a Hasselblad medium format camera with a 100mm lens. Unmistakable to a photograph. Cinematic lighting. Photographed by Tim Walker, trending on 500px
+
+        Game-Art | An island with different geographical properties and multiple small cities floating in space ::10 Island | Floating island in space – waterfalls over the edge of the island falling into space – island fragments floating around the edge of the island, Mountain Ranges – Deserts – Snowy Landscapes – Small Villages – one larger city ::8 Environment | Galaxy – in deep space – other universes can be seen in the distance ::2 Style | Unreal Engine 5 – 8K UHD – Highly Detailed – Game-Art
+
+        a warrior sitting on a giant creature and riding it in the water, with wings spread wide in the water, camera positioned just above the water to capture this beautiful scene, surface showing intricate details of the creature’s scales, fins, and wings, majesty, Hero rides on the creature in the water, digitally enhanced, enhanced graphics, straight, sharp focus, bright lighting, closeup, cinematic, Bronze, Azure, blue, ultra highly detailed, 18k, sharp focus, bright photo with rich colors, full coverage of a scene, straight view shot
+
+        A real photographic landscape painting with incomparable reality,Super wide,Ominous sky,Sailing boat,Wooden boat,Lotus,Huge waves,Starry night,Harry potter,Volumetric lighting,Clearing,Realistic,James gurney,artstation
+
+        Tiger monster with monstera plant over him, back alley in Bangkok, art by Otomo Katsuhiro crossover Yayoi Kusama and Hayao Miyazaki
+
+        An elderly Italian woman with wrinkles, sitting in a local cafe filled with plants and wood decorations, looking out the window, wearing a white top with light purple linen blazer, natural afternoon light shining through the window
+
+        # OUTPUT
+        Your output should just be an plain list of descriptions. No numbers, no extraneous labels, no hyphens.
+        Create only one prompt.
+        """

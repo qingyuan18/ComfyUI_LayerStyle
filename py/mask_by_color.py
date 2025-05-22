@@ -1,9 +1,15 @@
-from .imagefunc import *
+import torch
+from PIL import Image
+from .imagefunc import log, tensor2pil, pil2tensor, image2mask, create_mask_from_color_tensor, mask_fix
 
-NODE_NAME = 'MaskByColor'
+
 
 
 class MaskByColor:
+
+    def __init__(self):
+        self.NODE_NAME = 'MaskByColor'
+
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -11,7 +17,7 @@ class MaskByColor:
                 "image": ("IMAGE", ),
                 "color": ("COLOR", {"default": "#FFFFFF"},),
                 "color_in_HEX": ("STRING", {"default": ""}),
-                "threshold": ("INT", { "default": 0, "min": 0, "max": 100, "step": 1, }),
+                "threshold": ("INT", { "default": 50, "min": 0, "max": 100, "step": 1, }),
                 "fix_gap": ("INT", {"default": 2, "min": 0, "max": 32, "step": 1}),
                 "fix_threshold": ("FLOAT", {"default": 0.75, "min": 0.01, "max": 0.99, "step": 0.01}),
                 "invert_mask": ("BOOLEAN", {"default": False}),  # 反转mask

@@ -1,4 +1,5 @@
-from .imagefunc import *
+
+from .imagefunc import tensor2pil
 
 class XYtoPercent:
 
@@ -20,7 +21,7 @@ class XYtoPercent:
         }
 
     RETURN_TYPES = ("FLOAT", "FLOAT",)
-    RETURN_NAMES = ("x_percent", "x_percent",)
+    RETURN_NAMES = ("x_percent", "y_percent",)
     FUNCTION = 'xy_to_percent'
     CATEGORY = '😺dzNodes/LayerUtility/Data'
 

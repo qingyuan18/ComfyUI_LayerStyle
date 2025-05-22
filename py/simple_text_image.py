@@ -254,3 +254,4 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LayerUtility: SimpleTextImage": "LayerUtility: SimpleTextImage",
     "LayerUtility: SimpleTextImageV2": "LayerUtility: SimpleTextImageV2"
 }
+

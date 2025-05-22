@@ -1,11 +1,13 @@
-from .imagefunc import *
+import torch
+from PIL import Image
+from .imagefunc import log, tensor2pil, pil2tensor, image_channel_merge
 
-NODE_NAME = 'ImageChannelMerge'
+
 
 class ImageChannelMerge:
 
     def __init__(self):
-        pass
+        self.NODE_NAME = 'ImageChannelMerge'
 
     @classmethod
     def INPUT_TYPES(self):
@@ -46,7 +48,7 @@ class ImageChannelMerge:
             for c in channel_4:
                 c4_images.append(torch.unsqueeze(c, 0))
         else:
-            c4_images.append(Image.new('L', size=(width, height), color='white'))
+            c4_images.append(pil2tensor(Image.new('L', size=(width, height), color='white')))
 
         max_batch = max(len(c1_images), len(c2_images), len(c3_images), len(c4_images))
         for i in range(max_batch):
@@ -58,7 +60,7 @@ class ImageChannelMerge:
 
             ret_images.append(pil2tensor(ret_image))
 
-        log(f"{NODE_NAME} Processed {len(ret_images)} image(s).", message_type='finish')
+        log(f"{self.NODE_NAME} Processed {len(ret_images)} image(s).", message_type='finish')
         return (torch.cat(ret_images, dim=0),)
 
 NODE_CLASS_MAPPINGS = {
